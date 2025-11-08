@@ -20,6 +20,8 @@ const Auth = () => {
     setIsLoading(true);
     // TODO: Implement actual authentication with Lovable Cloud
     setTimeout(() => {
+      // Mock login - set logged in status
+      localStorage.setItem("isLoggedIn", "true");
       setIsLoading(false);
       navigate("/dashboard");
     }, 1000);
@@ -30,6 +32,8 @@ const Auth = () => {
     setIsLoading(true);
     // TODO: Implement actual signup with Lovable Cloud
     setTimeout(() => {
+      // Mock signup - set logged in status
+      localStorage.setItem("isLoggedIn", "true");
       setIsLoading(false);
       navigate("/dashboard");
     }, 1000);

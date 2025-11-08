@@ -6,45 +6,78 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { MapPin, Star, Clock, Phone } from "lucide-react";
 
-// Mock clinic data
-const mockClinics = [
-  {
-    id: 1,
-    name: "Vedic Ayurveda Center",
-    address: "123 Wellness Street, Andheri West",
-    rating: 4.8,
-    reviews: 234,
-    services: ["Panchakarma", "Consultation", "Massage Therapy"],
-    timings: "9:00 AM - 8:00 PM",
-    phone: "+91 98765 43210",
-  },
-  {
-    id: 2,
-    name: "Nature's Healing Clinic",
-    address: "456 Health Avenue, Andheri East",
-    rating: 4.6,
-    reviews: 189,
-    services: ["Herbal Medicine", "Yoga Therapy", "Diet Consultation"],
-    timings: "8:00 AM - 6:00 PM",
-    phone: "+91 98765 43211",
-  },
-  {
-    id: 3,
-    name: "Ayurvedic Wellness Hub",
-    address: "789 Serenity Road, Andheri",
-    rating: 4.9,
-    reviews: 312,
-    services: ["Panchakarma", "Marma Therapy", "Herbal Medicine"],
-    timings: "10:00 AM - 9:00 PM",
-    phone: "+91 98765 43212",
-  },
-];
+// Mock clinic data - dynamically generated based on location
+const getClinicsByLocation = (taluk: string) => {
+  const allClinics = [
+    {
+      id: 1,
+      name: "Vedic Ayurveda Center",
+      address: "123 Wellness Street, Puttur",
+      rating: 4.8,
+      reviews: 234,
+      services: ["Panchakarma", "Consultation", "Massage Therapy"],
+      timings: "9:00 AM - 8:00 PM",
+      phone: "+91 98765 43210",
+      taluk: "Puttur",
+    },
+    {
+      id: 2,
+      name: "Nature's Healing Clinic",
+      address: "456 Health Avenue, Puttur",
+      rating: 4.6,
+      reviews: 189,
+      services: ["Herbal Medicine", "Yoga Therapy", "Diet Consultation"],
+      timings: "8:00 AM - 6:00 PM",
+      phone: "+91 98765 43211",
+      taluk: "Puttur",
+    },
+    {
+      id: 3,
+      name: "Ayurvedic Wellness Hub",
+      address: "789 Serenity Road, Puttur",
+      rating: 4.9,
+      reviews: 312,
+      services: ["Panchakarma", "Marma Therapy", "Herbal Medicine"],
+      timings: "10:00 AM - 9:00 PM",
+      phone: "+91 98765 43212",
+      taluk: "Puttur",
+    },
+    {
+      id: 4,
+      name: "Shanti Ayurveda Hospital",
+      address: "12 Temple Road, Puttur",
+      rating: 4.7,
+      reviews: 178,
+      services: ["Surgery", "Panchakarma", "Consultation"],
+      timings: "8:00 AM - 8:00 PM",
+      phone: "+91 98765 43213",
+      taluk: "Puttur",
+    },
+    {
+      id: 5,
+      name: "Holistic Care Ayurveda",
+      address: "34 Market Street, Puttur",
+      rating: 4.5,
+      reviews: 156,
+      services: ["Women's Health", "Pediatrics", "Herbal Medicine"],
+      timings: "9:00 AM - 7:00 PM",
+      phone: "+91 98765 43214",
+      taluk: "Puttur",
+    },
+  ];
+  
+  return allClinics.filter(clinic => 
+    taluk ? clinic.taluk.toLowerCase() === taluk.toLowerCase() : true
+  );
+};
 
 const Clinics = () => {
   const [searchParams] = useSearchParams();
   const state = searchParams.get("state");
   const district = searchParams.get("district");
   const taluk = searchParams.get("taluk");
+  
+  const mockClinics = getClinicsByLocation(taluk || "");
 
   return (
     <div className="min-h-screen flex flex-col">

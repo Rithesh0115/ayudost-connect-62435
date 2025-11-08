@@ -1,13 +1,27 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Leaf, Menu } from "lucide-react";
+import { Leaf, Menu, LogOut } from "lucide-react";
 import {
   Sheet,
   SheetContent,
   SheetTrigger,
 } from "@/components/ui/sheet";
+import { useState, useEffect } from "react";
 
 const Navbar = () => {
+  const navigate = useNavigate();
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+
+  useEffect(() => {
+    setIsLoggedIn(localStorage.getItem("isLoggedIn") === "true");
+  }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem("isLoggedIn");
+    setIsLoggedIn(false);
+    navigate("/");
+  };
+
   return (
     <nav className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
@@ -33,12 +47,26 @@ const Navbar = () => {
         </div>
 
         <div className="hidden md:flex items-center gap-3">
-          <Link to="/auth">
-            <Button variant="ghost">Login</Button>
-          </Link>
-          <Link to="/auth?mode=signup">
-            <Button>Sign Up</Button>
-          </Link>
+          {isLoggedIn ? (
+            <>
+              <Link to="/dashboard">
+                <Button variant="ghost">Dashboard</Button>
+              </Link>
+              <Button variant="outline" onClick={handleLogout}>
+                <LogOut className="h-4 w-4 mr-2" />
+                Logout
+              </Button>
+            </>
+          ) : (
+            <>
+              <Link to="/auth">
+                <Button variant="ghost">Login</Button>
+              </Link>
+              <Link to="/auth?mode=signup">
+                <Button>Sign Up</Button>
+              </Link>
+            </>
+          )}
         </div>
 
         {/* Mobile Menu */}
@@ -63,12 +91,26 @@ const Navbar = () => {
                 Contact
               </Link>
               <div className="flex flex-col gap-2 mt-4">
-                <Link to="/auth">
-                  <Button variant="outline" className="w-full">Login</Button>
-                </Link>
-                <Link to="/auth?mode=signup">
-                  <Button className="w-full">Sign Up</Button>
-                </Link>
+                {isLoggedIn ? (
+                  <>
+                    <Link to="/dashboard">
+                      <Button variant="outline" className="w-full">Dashboard</Button>
+                    </Link>
+                    <Button variant="outline" className="w-full" onClick={handleLogout}>
+                      <LogOut className="h-4 w-4 mr-2" />
+                      Logout
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Link to="/auth">
+                      <Button variant="outline" className="w-full">Login</Button>
+                    </Link>
+                    <Link to="/auth?mode=signup">
+                      <Button className="w-full">Sign Up</Button>
+                    </Link>
+                  </>
+                )}
               </div>
             </div>
           </SheetContent>

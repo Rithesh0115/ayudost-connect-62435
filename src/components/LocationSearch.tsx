@@ -23,6 +23,8 @@ const locationData = {
     Mumbai: ["Andheri", "Bandra", "Borivali"],
     Pune: ["Haveli", "Mulshi", "Bhor"],
     Bangalore: ["Bangalore North", "Bangalore South", "Anekal"],
+    Mangalore: ["Puttur", "Bantwal", "Belthangady"],
+    Mysore: ["Mysore City", "H.D. Kote", "Nanjangud"],
   },
 };
 
