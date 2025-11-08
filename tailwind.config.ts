@@ -47,6 +47,13 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        ayur: {
+          green: "hsl(var(--ayur-green))",
+          "green-light": "hsl(var(--ayur-green-light))",
+          earth: "hsl(var(--ayur-earth))",
+          gold: "hsl(var(--ayur-gold))",
+          cream: "hsl(var(--ayur-cream))",
+        },
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
           foreground: "hsl(var(--sidebar-foreground))",
