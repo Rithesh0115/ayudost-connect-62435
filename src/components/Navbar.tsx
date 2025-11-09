@@ -1,6 +1,7 @@
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Leaf, Menu, LogOut } from "lucide-react";
+import { Menu, LogOut } from "lucide-react";
+import ayudostLogo from "@/assets/ayudost-logo.png";
 import {
   Sheet,
   SheetContent,
@@ -34,7 +35,7 @@ const Navbar = () => {
     <nav className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container mx-auto px-4 h-16 flex items-center justify-between">
         <Link to="/" className="flex items-center gap-2 text-xl font-bold text-primary hover:text-primary/80 transition-colors">
-          <Leaf className="h-6 w-6" />
+          <img src={ayudostLogo} alt="AyuDost Logo" className="h-8 w-8 object-contain" />
           <span>AyuDost</span>
         </Link>
 
