@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -6,12 +6,16 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Calendar, Users, FileText, TrendingUp, Clock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 const DoctorDashboard = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const [selectedAppointment, setSelectedAppointment] = useState<any>(null);
+  const [showDetailsDialog, setShowDetailsDialog] = useState(false);
+  const [showConsultationDialog, setShowConsultationDialog] = useState(false);
 
   useEffect(() => {
     // Check if doctor is logged in
@@ -19,6 +23,7 @@ const DoctorDashboard = () => {
       navigate("/doctor-auth");
     }
   }, [navigate]);
+
   const todayAppointments = [
     { id: 1, patient: "Rahul Mehta", time: "10:00 AM", type: "In-Person", status: "Confirmed" },
     { id: 2, patient: "Priya Singh", time: "11:30 AM", type: "Teleconsultation", status: "Confirmed" },
@@ -126,8 +131,25 @@ const DoctorDashboard = () => {
                           <p className="font-medium">{appointment.time}</p>
                         </div>
                         <div className="flex gap-2 mt-2">
-                          <Button size="sm">Start Consultation</Button>
-                          <Button variant="outline" size="sm">View Details</Button>
+                          <Button 
+                            size="sm"
+                            onClick={() => {
+                              setSelectedAppointment(appointment);
+                              setShowConsultationDialog(true);
+                            }}
+                          >
+                            Start Consultation
+                          </Button>
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => {
+                              setSelectedAppointment(appointment);
+                              setShowDetailsDialog(true);
+                            }}
+                          >
+                            View Details
+                          </Button>
                         </div>
                       </div>
                     </div>
@@ -176,6 +198,76 @@ const DoctorDashboard = () => {
       </main>
 
       <Footer />
+
+      {/* View Details Dialog */}
+      <Dialog open={showDetailsDialog} onOpenChange={setShowDetailsDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Appointment Details</DialogTitle>
+            <DialogDescription>Complete information about this appointment</DialogDescription>
+          </DialogHeader>
+          {selectedAppointment && (
+            <div className="space-y-4">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Patient Name</p>
+                <p className="text-base font-semibold">{selectedAppointment.patient}</p>
+              </div>
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Appointment Time</p>
+                <p className="text-base font-semibold">{selectedAppointment.time}</p>
+              </div>
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Consultation Type</p>
+                <p className="text-base font-semibold">{selectedAppointment.type}</p>
+              </div>
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Status</p>
+                <Badge variant="secondary">{selectedAppointment.status}</Badge>
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowDetailsDialog(false)}>Close</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Start Consultation Dialog */}
+      <Dialog open={showConsultationDialog} onOpenChange={setShowConsultationDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Start Consultation</DialogTitle>
+            <DialogDescription>Begin consultation with {selectedAppointment?.patient}</DialogDescription>
+          </DialogHeader>
+          {selectedAppointment && (
+            <div className="space-y-4">
+              <p className="text-sm text-muted-foreground">
+                You are about to start a {selectedAppointment.type} consultation with {selectedAppointment.patient} scheduled for {selectedAppointment.time}.
+              </p>
+              <div className="p-4 bg-muted rounded-lg">
+                <p className="text-sm font-medium">Quick Actions:</p>
+                <ul className="text-sm text-muted-foreground mt-2 space-y-1">
+                  <li>• Review patient history</li>
+                  <li>• Prepare consultation notes</li>
+                  <li>• Have prescription pad ready</li>
+                </ul>
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowConsultationDialog(false)}>Cancel</Button>
+            <Button onClick={() => {
+              setShowConsultationDialog(false);
+              toast({
+                title: "Consultation Started",
+                description: `Now consulting with ${selectedAppointment?.patient}`,
+              });
+            }}>
+              Begin Consultation
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
