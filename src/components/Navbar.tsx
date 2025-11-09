@@ -82,7 +82,7 @@ const Navbar = () => {
           ) : isAdminLoggedIn ? (
             <>
               <Link to="/admin">
-                <Button variant="ghost" size="icon" className="rounded-full">
+                <Button variant="ghost" size="icon" className="rounded-full border-2 border-foreground">
                   <span className="text-sm font-semibold">A</span>
                 </Button>
               </Link>
