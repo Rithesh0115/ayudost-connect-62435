@@ -50,7 +50,9 @@ const Navbar = () => {
           {isLoggedIn ? (
             <>
               <Link to="/dashboard">
-                <Button variant="ghost">Dashboard</Button>
+                <Button variant="ghost" size="icon" className="rounded-full">
+                  <span className="text-sm font-semibold">U</span>
+                </Button>
               </Link>
               <Button variant="outline" onClick={handleLogout}>
                 <LogOut className="h-4 w-4 mr-2" />
@@ -94,7 +96,9 @@ const Navbar = () => {
                 {isLoggedIn ? (
                   <>
                     <Link to="/dashboard">
-                      <Button variant="outline" className="w-full">Dashboard</Button>
+                      <Button variant="outline" size="icon" className="rounded-full mx-auto">
+                        <span className="text-sm font-semibold">U</span>
+                      </Button>
                     </Link>
                     <Button variant="outline" className="w-full" onClick={handleLogout}>
                       <LogOut className="h-4 w-4 mr-2" />
