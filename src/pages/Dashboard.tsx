@@ -29,6 +29,12 @@ const Dashboard = () => {
     bloodGroup: "O+",
   });
   const [isEditingProfile, setIsEditingProfile] = useState(false);
+  const [medicalRecords, setMedicalRecords] = useState<any[]>([]);
+  const [prescriptions, setPrescriptions] = useState<any[]>([]);
+  const [addRecordDialog, setAddRecordDialog] = useState(false);
+  const [addPrescriptionDialog, setAddPrescriptionDialog] = useState(false);
+  const [newRecord, setNewRecord] = useState({ title: "", date: "", type: "", notes: "" });
+  const [newPrescription, setNewPrescription] = useState({ medicine: "", dosage: "", frequency: "", duration: "", prescribedBy: "", date: "" });
 
   useEffect(() => {
     // Check if user is logged in
@@ -45,6 +51,17 @@ const Dashboard = () => {
     const savedProfile = localStorage.getItem("userProfile");
     if (savedProfile) {
       setProfile(JSON.parse(savedProfile));
+    }
+
+    // Load medical records and prescriptions
+    const savedRecords = localStorage.getItem("medicalRecords");
+    if (savedRecords) {
+      setMedicalRecords(JSON.parse(savedRecords));
+    }
+
+    const savedPrescriptions = localStorage.getItem("prescriptions");
+    if (savedPrescriptions) {
+      setPrescriptions(JSON.parse(savedPrescriptions));
     }
   }, [navigate]);
 
@@ -109,6 +126,63 @@ const Dashboard = () => {
     setProfile(prev => ({ ...prev, [field]: value }));
   };
 
+  const handleAddRecord = () => {
+    if (!newRecord.title || !newRecord.date || !newRecord.type) {
+      toast({
+        title: "Error",
+        description: "Please fill in all required fields",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const record = {
+      id: Date.now(),
+      ...newRecord,
+    };
+
+    const updatedRecords = [...medicalRecords, record];
+    setMedicalRecords(updatedRecords);
+    localStorage.setItem("medicalRecords", JSON.stringify(updatedRecords));
+
+    toast({
+      title: "Record Added",
+      description: "Medical record has been added successfully",
+    });
+
+    setNewRecord({ title: "", date: "", type: "", notes: "" });
+    setAddRecordDialog(false);
+  };
+
+  const handleAddPrescription = () => {
+    if (!newPrescription.medicine || !newPrescription.dosage || !newPrescription.frequency || !newPrescription.duration) {
+      toast({
+        title: "Error",
+        description: "Please fill in all required fields",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const prescription = {
+      id: Date.now(),
+      ...newPrescription,
+      status: "Active",
+    };
+
+    const updatedPrescriptions = [...prescriptions, prescription];
+    setPrescriptions(updatedPrescriptions);
+    localStorage.setItem("prescriptions", JSON.stringify(updatedPrescriptions));
+
+    toast({
+      title: "Prescription Added",
+      description: "Prescription has been added successfully",
+    });
+
+    setNewPrescription({ medicine: "", dosage: "", frequency: "", duration: "", prescribedBy: "", date: "" });
+    setAddPrescriptionDialog(false);
+  };
+
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
@@ -146,10 +220,10 @@ const Dashboard = () => {
                   <FileText className="h-4 w-4 text-muted-foreground" />
                 </div>
               </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">12</div>
-                <p className="text-xs text-muted-foreground">Medical records</p>
-              </CardContent>
+               <CardContent>
+                 <div className="text-2xl font-bold">{medicalRecords.length}</div>
+                 <p className="text-xs text-muted-foreground">Medical records</p>
+               </CardContent>
             </Card>
 
             <Card>
@@ -159,10 +233,10 @@ const Dashboard = () => {
                   <Heart className="h-4 w-4 text-muted-foreground" />
                 </div>
               </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">8</div>
-                <p className="text-xs text-muted-foreground">Active prescriptions</p>
-              </CardContent>
+               <CardContent>
+                 <div className="text-2xl font-bold">{prescriptions.length}</div>
+                 <p className="text-xs text-muted-foreground">Active prescriptions</p>
+               </CardContent>
             </Card>
 
             <Card>
@@ -226,11 +300,35 @@ const Dashboard = () => {
             <TabsContent value="records">
               <Card>
                 <CardHeader>
-                  <CardTitle>Medical Records</CardTitle>
-                  <CardDescription>Your health history and documents</CardDescription>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <CardTitle>Medical Records</CardTitle>
+                      <CardDescription>Your health history and documents</CardDescription>
+                    </div>
+                    <Button onClick={() => setAddRecordDialog(true)}>
+                      Add Record
+                    </Button>
+                  </div>
                 </CardHeader>
-                <CardContent>
-                  <p className="text-muted-foreground">Your medical records will appear here.</p>
+                <CardContent className="space-y-4">
+                  {medicalRecords.length > 0 ? (
+                    medicalRecords.map((record) => (
+                      <div key={record.id} className="p-4 border border-border rounded-lg space-y-2">
+                        <div className="flex items-start justify-between">
+                          <div>
+                            <h3 className="font-semibold">{record.title}</h3>
+                            <p className="text-sm text-muted-foreground">{record.date}</p>
+                          </div>
+                          <Badge variant="secondary">{record.type}</Badge>
+                        </div>
+                        {record.notes && (
+                          <p className="text-sm text-muted-foreground">{record.notes}</p>
+                        )}
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-muted-foreground text-center py-8">No medical records yet. Add your first record to get started!</p>
+                  )}
                 </CardContent>
               </Card>
             </TabsContent>
@@ -238,11 +336,52 @@ const Dashboard = () => {
             <TabsContent value="prescriptions">
               <Card>
                 <CardHeader>
-                  <CardTitle>Prescriptions</CardTitle>
-                  <CardDescription>Your active and past prescriptions</CardDescription>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <CardTitle>Prescriptions</CardTitle>
+                      <CardDescription>Your active and past prescriptions</CardDescription>
+                    </div>
+                    <Button onClick={() => setAddPrescriptionDialog(true)}>
+                      Add Prescription
+                    </Button>
+                  </div>
                 </CardHeader>
-                <CardContent>
-                  <p className="text-muted-foreground">Your prescriptions will appear here.</p>
+                <CardContent className="space-y-4">
+                  {prescriptions.length > 0 ? (
+                    prescriptions.map((prescription) => (
+                      <div key={prescription.id} className="p-4 border border-border rounded-lg space-y-3">
+                        <div className="flex items-start justify-between">
+                          <div>
+                            <h3 className="font-semibold text-lg">{prescription.medicine}</h3>
+                            {prescription.prescribedBy && (
+                              <p className="text-sm text-muted-foreground">Prescribed by {prescription.prescribedBy}</p>
+                            )}
+                          </div>
+                          <Badge variant={prescription.status === "Active" ? "default" : "secondary"}>
+                            {prescription.status}
+                          </Badge>
+                        </div>
+                        <div className="grid grid-cols-2 gap-2 text-sm">
+                          <div>
+                            <span className="text-muted-foreground">Dosage:</span> {prescription.dosage}
+                          </div>
+                          <div>
+                            <span className="text-muted-foreground">Frequency:</span> {prescription.frequency}
+                          </div>
+                          <div>
+                            <span className="text-muted-foreground">Duration:</span> {prescription.duration}
+                          </div>
+                          {prescription.date && (
+                            <div>
+                              <span className="text-muted-foreground">Date:</span> {prescription.date}
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <p className="text-muted-foreground text-center py-8">No prescriptions yet. Add your first prescription to track your medications!</p>
+                  )}
                 </CardContent>
               </Card>
             </TabsContent>
@@ -376,6 +515,138 @@ const Dashboard = () => {
             </Button>
             <Button onClick={confirmReschedule}>
               Confirm Reschedule
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={addRecordDialog} onOpenChange={setAddRecordDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add Medical Record</DialogTitle>
+            <DialogDescription>
+              Add a new medical record to your health history
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="recordTitle">Title *</Label>
+              <Input
+                id="recordTitle"
+                placeholder="e.g., Blood Test Results"
+                value={newRecord.title}
+                onChange={(e) => setNewRecord({ ...newRecord, title: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="recordType">Type *</Label>
+              <Input
+                id="recordType"
+                placeholder="e.g., Lab Test, X-Ray, Consultation"
+                value={newRecord.type}
+                onChange={(e) => setNewRecord({ ...newRecord, type: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="recordDate">Date *</Label>
+              <Input
+                id="recordDate"
+                type="date"
+                value={newRecord.date}
+                onChange={(e) => setNewRecord({ ...newRecord, date: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="recordNotes">Notes</Label>
+              <Input
+                id="recordNotes"
+                placeholder="Additional notes or observations"
+                value={newRecord.notes}
+                onChange={(e) => setNewRecord({ ...newRecord, notes: e.target.value })}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setAddRecordDialog(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleAddRecord}>
+              Add Record
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={addPrescriptionDialog} onOpenChange={setAddPrescriptionDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add Prescription</DialogTitle>
+            <DialogDescription>
+              Add a new prescription to track your medications
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="medicine">Medicine Name *</Label>
+              <Input
+                id="medicine"
+                placeholder="e.g., Ashwagandha Churna"
+                value={newPrescription.medicine}
+                onChange={(e) => setNewPrescription({ ...newPrescription, medicine: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="dosage">Dosage *</Label>
+              <Input
+                id="dosage"
+                placeholder="e.g., 500mg"
+                value={newPrescription.dosage}
+                onChange={(e) => setNewPrescription({ ...newPrescription, dosage: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="frequency">Frequency *</Label>
+              <Input
+                id="frequency"
+                placeholder="e.g., Twice daily"
+                value={newPrescription.frequency}
+                onChange={(e) => setNewPrescription({ ...newPrescription, frequency: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="duration">Duration *</Label>
+              <Input
+                id="duration"
+                placeholder="e.g., 30 days"
+                value={newPrescription.duration}
+                onChange={(e) => setNewPrescription({ ...newPrescription, duration: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="prescribedBy">Prescribed By</Label>
+              <Input
+                id="prescribedBy"
+                placeholder="Doctor's name"
+                value={newPrescription.prescribedBy}
+                onChange={(e) => setNewPrescription({ ...newPrescription, prescribedBy: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="prescriptionDate">Date</Label>
+              <Input
+                id="prescriptionDate"
+                type="date"
+                value={newPrescription.date}
+                onChange={(e) => setNewPrescription({ ...newPrescription, date: e.target.value })}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setAddPrescriptionDialog(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleAddPrescription}>
+              Add Prescription
             </Button>
           </DialogFooter>
         </DialogContent>
