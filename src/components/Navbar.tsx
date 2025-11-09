@@ -70,7 +70,7 @@ const Navbar = () => {
           ) : isDoctorLoggedIn ? (
             <>
               <Link to="/doctor-dashboard">
-                <Button variant="ghost" size="icon" className="rounded-full">
+                <Button variant="ghost" size="icon" className="rounded-full border-2 border-foreground">
                   <span className="text-sm font-semibold">D</span>
                 </Button>
               </Link>
