@@ -256,7 +256,7 @@ const Dashboard = () => {
           {/* Main Content */}
           <Tabs defaultValue="appointments" className="space-y-6">
             <TabsList>
-              <TabsTrigger value="appointments">Appointments</TabsTrigger>
+              <TabsTrigger value="appointments">My Appointments</TabsTrigger>
               <TabsTrigger value="records">Medical Records</TabsTrigger>
               <TabsTrigger value="prescriptions">Prescriptions</TabsTrigger>
               <TabsTrigger value="profile">Profile</TabsTrigger>
@@ -265,34 +265,66 @@ const Dashboard = () => {
             <TabsContent value="appointments" className="space-y-4">
               <Card>
                 <CardHeader>
-                  <CardTitle>Upcoming Appointments</CardTitle>
+                  <CardTitle>My Appointments</CardTitle>
                   <CardDescription>Your scheduled consultations</CardDescription>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                  {upcomingAppointments.length > 0 ? (
-                    upcomingAppointments.map((appointment) => (
-                      <div key={appointment.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 border border-border rounded-lg">
-                        <div className="space-y-1 mb-4 sm:mb-0">
-                          <h3 className="font-semibold">{appointment.doctor}</h3>
-                          <p className="text-sm text-muted-foreground">{appointment.clinic}</p>
-                          <div className="flex items-center gap-2 mt-2">
-                            <Badge variant="outline">{appointment.type}</Badge>
-                            <Badge variant="secondary">{appointment.status}</Badge>
+                <CardContent>
+                  <Tabs defaultValue="upcoming">
+                    <TabsList className="w-full">
+                      <TabsTrigger value="upcoming" className="flex-1">Upcoming</TabsTrigger>
+                      <TabsTrigger value="past" className="flex-1">Past</TabsTrigger>
+                    </TabsList>
+
+                    <TabsContent value="upcoming" className="space-y-4 mt-4">
+                      {upcomingAppointments.filter(apt => new Date(apt.date) >= new Date()).length > 0 ? (
+                        upcomingAppointments.filter(apt => new Date(apt.date) >= new Date()).map((appointment) => (
+                          <div key={appointment.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 border border-border rounded-lg">
+                            <div className="space-y-1 mb-4 sm:mb-0">
+                              <h3 className="font-semibold">{appointment.doctor}</h3>
+                              <p className="text-sm text-muted-foreground">{appointment.clinic}</p>
+                              <div className="flex items-center gap-2 mt-2">
+                                <Badge variant="outline">{appointment.type}</Badge>
+                                <Badge variant="secondary">{appointment.status}</Badge>
+                              </div>
+                            </div>
+                            <div className="text-left sm:text-right space-y-2">
+                              <p className="font-medium">{appointment.date}</p>
+                              <p className="text-sm text-muted-foreground">{appointment.time}</p>
+                              <div className="flex gap-2 mt-2">
+                                <Button variant="outline" size="sm" onClick={() => handleReschedule(appointment.id)}>Reschedule</Button>
+                                <Button variant="destructive" size="sm" onClick={() => handleCancel(appointment.id)}>Cancel</Button>
+                              </div>
+                            </div>
                           </div>
-                        </div>
-                        <div className="text-left sm:text-right space-y-2">
-                          <p className="font-medium">{appointment.date}</p>
-                          <p className="text-sm text-muted-foreground">{appointment.time}</p>
-                          <div className="flex gap-2 mt-2">
-                            <Button variant="outline" size="sm" onClick={() => handleReschedule(appointment.id)}>Reschedule</Button>
-                            <Button variant="destructive" size="sm" onClick={() => handleCancel(appointment.id)}>Cancel</Button>
+                        ))
+                      ) : (
+                        <p className="text-muted-foreground text-center py-8">No upcoming appointments. Book your first appointment to get started!</p>
+                      )}
+                    </TabsContent>
+
+                    <TabsContent value="past" className="space-y-4 mt-4">
+                      {upcomingAppointments.filter(apt => new Date(apt.date) < new Date()).length > 0 ? (
+                        upcomingAppointments.filter(apt => new Date(apt.date) < new Date()).map((appointment) => (
+                          <div key={appointment.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 border border-border rounded-lg opacity-75">
+                            <div className="space-y-1 mb-4 sm:mb-0">
+                              <h3 className="font-semibold">{appointment.doctor}</h3>
+                              <p className="text-sm text-muted-foreground">{appointment.clinic}</p>
+                              <div className="flex items-center gap-2 mt-2">
+                                <Badge variant="outline">{appointment.type}</Badge>
+                                <Badge variant="secondary">Completed</Badge>
+                              </div>
+                            </div>
+                            <div className="text-left sm:text-right space-y-2">
+                              <p className="font-medium">{appointment.date}</p>
+                              <p className="text-sm text-muted-foreground">{appointment.time}</p>
+                            </div>
                           </div>
-                        </div>
-                      </div>
-                    ))
-                  ) : (
-                    <p className="text-muted-foreground text-center py-8">No appointments booked yet. Book your first appointment to get started!</p>
-                  )}
+                        ))
+                      ) : (
+                        <p className="text-muted-foreground text-center py-8">No past appointments found.</p>
+                      )}
+                    </TabsContent>
+                  </Tabs>
                 </CardContent>
               </Card>
             </TabsContent>
