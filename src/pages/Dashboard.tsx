@@ -183,6 +183,10 @@ const Dashboard = () => {
     setAddPrescriptionDialog(false);
   };
 
+  const totalAppointments = upcomingAppointments?.length || 0;
+  const upcomingCount = upcomingAppointments.filter(apt => new Date(apt.date) >= new Date()).length;
+  const pastCount = upcomingAppointments.filter(apt => new Date(apt.date) < new Date()).length;
+
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
@@ -203,13 +207,13 @@ const Dashboard = () => {
             <Card>
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
-                  <CardTitle className="text-sm font-medium">Upcoming</CardTitle>
+                  <CardTitle className="text-sm font-medium">Total Appointments</CardTitle>
                   <Calendar className="h-4 w-4 text-muted-foreground" />
                 </div>
               </CardHeader>
                 <CardContent>
-                  <div className="text-2xl font-bold">{upcomingAppointments?.length || 0}</div>
-                  <p className="text-xs text-muted-foreground">Appointments</p>
+                  <div className="text-2xl font-bold">{totalAppointments}</div>
+                  <p className="text-xs text-muted-foreground">All appointments</p>
                 </CardContent>
             </Card>
 
@@ -271,8 +275,8 @@ const Dashboard = () => {
                 <CardContent>
                   <Tabs defaultValue="upcoming">
                     <TabsList className="w-full">
-                      <TabsTrigger value="upcoming" className="flex-1">Upcoming</TabsTrigger>
-                      <TabsTrigger value="past" className="flex-1">Past</TabsTrigger>
+                      <TabsTrigger value="upcoming" className="flex-1">Upcoming ({upcomingCount})</TabsTrigger>
+                      <TabsTrigger value="past" className="flex-1">Past ({pastCount})</TabsTrigger>
                     </TabsList>
 
                     <TabsContent value="upcoming" className="space-y-4 mt-4">
