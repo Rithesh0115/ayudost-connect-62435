@@ -9,32 +9,39 @@ import {
 } from "@/components/ui/select";
 import { Search } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useToast } from "@/hooks/use-toast";
 
-// Mock data - in production, this would come from an API
+// Only Karnataka → Dakshina Kannada → Puttur
 const locationData = {
-  states: ["Maharashtra", "Karnataka", "Kerala", "Tamil Nadu"],
+  states: ["Karnataka"],
   districts: {
-    Maharashtra: ["Mumbai", "Pune", "Nagpur"],
-    Karnataka: ["Bangalore", "Mysore", "Mangalore"],
-    Kerala: ["Thiruvananthapuram", "Kochi", "Kozhikode"],
-    "Tamil Nadu": ["Chennai", "Coimbatore", "Madurai"],
+    Karnataka: ["Dakshina Kannada"],
   },
   taluks: {
-    Mumbai: ["Andheri", "Bandra", "Borivali"],
-    Pune: ["Haveli", "Mulshi", "Bhor"],
-    Bangalore: ["Bangalore North", "Bangalore South", "Anekal"],
-    Mangalore: ["Puttur", "Bantwal", "Belthangady"],
-    Mysore: ["Mysore City", "H.D. Kote", "Nanjangud"],
+    "Dakshina Kannada": ["Puttur"],
   },
 };
 
 const LocationSearch = () => {
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [selectedState, setSelectedState] = useState("");
   const [selectedDistrict, setSelectedDistrict] = useState("");
   const [selectedTaluk, setSelectedTaluk] = useState("");
 
   const handleSearch = () => {
+    const isLoggedIn = localStorage.getItem("isLoggedIn") === "true";
+    
+    if (!isLoggedIn) {
+      toast({
+        title: "Login Required",
+        description: "Please login to search for clinics",
+        variant: "destructive",
+      });
+      navigate("/auth?mode=login");
+      return;
+    }
+
     if (selectedState && selectedDistrict && selectedTaluk) {
       navigate(`/clinics?state=${selectedState}&district=${selectedDistrict}&taluk=${selectedTaluk}`);
     }

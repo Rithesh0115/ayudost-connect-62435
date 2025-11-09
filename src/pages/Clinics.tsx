@@ -1,4 +1,4 @@
-import { useSearchParams, Link } from "react-router-dom";
+import { useSearchParams, Link, useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -73,9 +73,18 @@ const getClinicsByLocation = (taluk: string) => {
 
 const Clinics = () => {
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const state = searchParams.get("state");
   const district = searchParams.get("district");
   const taluk = searchParams.get("taluk");
+  
+  // Check if user is logged in
+  const isLoggedIn = localStorage.getItem("isLoggedIn") === "true";
+  
+  if (!isLoggedIn) {
+    navigate("/auth?mode=login");
+    return null;
+  }
   
   const mockClinics = getClinicsByLocation(taluk || "");
 

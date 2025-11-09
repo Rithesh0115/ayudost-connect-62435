@@ -123,8 +123,7 @@ const ClinicDetail = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  const handleBookAppointment = (doctorName: string) => {
-    // Check if user is logged in (mock check - in production, check actual auth state)
+  const handleBookAppointment = (doctorId: number) => {
     const isLoggedIn = localStorage.getItem("isLoggedIn") === "true";
     
     if (!isLoggedIn) {
@@ -137,12 +136,8 @@ const ClinicDetail = () => {
       return;
     }
 
-    // If logged in, proceed to booking
-    toast({
-      title: "Booking Appointment",
-      description: `Proceeding to book with ${doctorName}`,
-    });
-    // TODO: Navigate to actual booking page with doctor details
+    // Navigate to booking page
+    navigate(`/book-appointment/${doctorId}?clinicId=${id}`);
   };
 
   return (
@@ -238,7 +233,7 @@ const ClinicDetail = () => {
                     
                     <Button 
                       className="w-full md:w-auto"
-                      onClick={() => handleBookAppointment(doctor.name)}
+                      onClick={() => handleBookAppointment(doctor.id)}
                     >
                       <Calendar className="mr-2 h-4 w-4" />
                       Book Appointment

@@ -29,9 +29,8 @@ const Footer = () => {
           <div>
             <h3 className="font-semibold mb-4">For Healthcare Providers</h3>
             <ul className="space-y-2 text-sm">
-              <li><Link to="/doctor-dashboard" className="hover:text-accent transition-colors">Doctor Portal</Link></li>
-              <li><Link to="/admin" className="hover:text-accent transition-colors">Admin Panel</Link></li>
-              <li><Link to="/register-clinic" className="hover:text-accent transition-colors">Register Clinic</Link></li>
+              <li><Link to="/doctor-auth" className="hover:text-accent transition-colors">Doctor Portal</Link></li>
+              <li><Link to="/admin-auth" className="hover:text-accent transition-colors">Admin Panel</Link></li>
             </ul>
           </div>
 
