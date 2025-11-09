@@ -123,7 +123,7 @@ const ClinicDetail = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  const handleBookAppointment = (doctorId: number) => {
+  const handleBookAppointment = (doctor: any) => {
     const isLoggedIn = localStorage.getItem("isLoggedIn") === "true";
     
     if (!isLoggedIn) {
@@ -136,8 +136,8 @@ const ClinicDetail = () => {
       return;
     }
 
-    // Navigate to booking page
-    navigate(`/book-appointment/${doctorId}?clinicId=${id}`);
+    // Navigate to booking page with doctor details
+    navigate(`/book-appointment/${doctor.id}?clinicId=${id}&doctorName=${encodeURIComponent(doctor.name)}&qualification=${encodeURIComponent(doctor.qualification)}&specialization=${encodeURIComponent(doctor.specialization)}&experience=${encodeURIComponent(doctor.experience)}&rating=${doctor.rating}&reviews=${doctor.reviews}&fee=${encodeURIComponent(doctor.consultationFee)}`);
   };
 
   return (
@@ -233,7 +233,7 @@ const ClinicDetail = () => {
                     
                     <Button 
                       className="w-full md:w-auto"
-                      onClick={() => handleBookAppointment(doctor.id)}
+                      onClick={() => handleBookAppointment(doctor)}
                     >
                       <Calendar className="mr-2 h-4 w-4" />
                       Book Appointment

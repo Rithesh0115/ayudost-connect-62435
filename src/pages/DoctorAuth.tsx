@@ -19,30 +19,58 @@ const DoctorAuth = () => {
     e.preventDefault();
     setIsLoading(true);
     
-    setTimeout(() => {
-      localStorage.setItem("isDoctorLoggedIn", "true");
+    const formData = new FormData(e.target as HTMLFormElement);
+    const name = formData.get("name") as string;
+    const password = formData.get("password") as string;
+
+    if (name && password) {
+      setTimeout(() => {
+        localStorage.setItem("isDoctorLoggedIn", "true");
+        localStorage.setItem("doctorName", name);
+        setIsLoading(false);
+        toast({
+          title: "Login Successful",
+          description: "Welcome back, Doctor!",
+        });
+        navigate("/doctor-dashboard");
+      }, 1000);
+    } else {
       setIsLoading(false);
       toast({
-        title: "Welcome Doctor!",
-        description: "Login successful",
+        title: "Login Failed",
+        description: "Please enter valid credentials",
+        variant: "destructive",
       });
-      navigate("/doctor-dashboard");
-    }, 1000);
+    }
   };
 
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
     
-    setTimeout(() => {
-      localStorage.setItem("isDoctorLoggedIn", "true");
+    const formData = new FormData(e.target as HTMLFormElement);
+    const name = formData.get("name") as string;
+    const password = formData.get("password") as string;
+
+    if (name && password) {
+      setTimeout(() => {
+        localStorage.setItem("isDoctorLoggedIn", "true");
+        localStorage.setItem("doctorName", name);
+        setIsLoading(false);
+        toast({
+          title: "Account Created",
+          description: "Welcome to AyuDost!",
+        });
+        navigate("/doctor-dashboard");
+      }, 1000);
+    } else {
       setIsLoading(false);
       toast({
-        title: "Registration Successful!",
-        description: "Your account has been created",
+        title: "Signup Failed",
+        description: "Please fill all required fields",
+        variant: "destructive",
       });
-      navigate("/doctor-dashboard");
-    }, 1000);
+    }
   };
 
   return (
@@ -72,24 +100,27 @@ const DoctorAuth = () => {
               <TabsContent value="login">
                 <form onSubmit={handleLogin} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="doctor-email">Email</Label>
+                    <Label htmlFor="login-name">Name</Label>
                     <Input
-                      id="doctor-email"
-                      type="email"
-                      placeholder="doctor@ayudost.com"
+                      id="login-name"
+                      name="name"
+                      type="text"
+                      placeholder="Enter your name"
                       required
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="doctor-password">Password</Label>
+                    <Label htmlFor="login-password">Password</Label>
                     <Input
-                      id="doctor-password"
+                      id="login-password"
+                      name="password"
                       type="password"
+                      placeholder="Enter your password"
                       required
                     />
                   </div>
                   <Button type="submit" className="w-full" disabled={isLoading}>
-                    {isLoading ? "Signing in..." : "Sign In"}
+                    {isLoading ? "Logging in..." : "Login"}
                   </Button>
                 </form>
               </TabsContent>
@@ -97,60 +128,27 @@ const DoctorAuth = () => {
               <TabsContent value="signup">
                 <form onSubmit={handleSignup} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="doctor-name">Full Name</Label>
+                    <Label htmlFor="signup-name">Name</Label>
                     <Input
-                      id="doctor-name"
+                      id="signup-name"
+                      name="name"
                       type="text"
-                      placeholder="Dr. John Doe"
+                      placeholder="Enter your full name"
                       required
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="doctor-qualification">Qualification</Label>
+                    <Label htmlFor="signup-password">Password</Label>
                     <Input
-                      id="doctor-qualification"
-                      type="text"
-                      placeholder="BAMS, MD"
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="doctor-registration">Registration Number</Label>
-                    <Input
-                      id="doctor-registration"
-                      type="text"
-                      placeholder="Medical Council Registration"
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="doctor-signup-email">Email</Label>
-                    <Input
-                      id="doctor-signup-email"
-                      type="email"
-                      placeholder="doctor@ayudost.com"
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="doctor-phone">Phone Number</Label>
-                    <Input
-                      id="doctor-phone"
-                      type="tel"
-                      placeholder="+91 98765 43210"
-                      required
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="doctor-signup-password">Password</Label>
-                    <Input
-                      id="doctor-signup-password"
+                      id="signup-password"
+                      name="password"
                       type="password"
+                      placeholder="Create a password"
                       required
                     />
                   </div>
                   <Button type="submit" className="w-full" disabled={isLoading}>
-                    {isLoading ? "Creating account..." : "Create Doctor Account"}
+                    {isLoading ? "Creating account..." : "Create Account"}
                   </Button>
                 </form>
               </TabsContent>

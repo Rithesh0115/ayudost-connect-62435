@@ -1,11 +1,30 @@
+import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Users, Building2, Calendar, DollarSign, TrendingUp, Activity } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 const AdminDashboard = () => {
+  const navigate = useNavigate();
+  const { toast } = useToast();
+
+  useEffect(() => {
+    // Check if admin is logged in
+    if (localStorage.getItem("isAdminLoggedIn") !== "true") {
+      navigate("/admin-auth");
+    }
+  }, [navigate]);
+
+  const handleAddUser = () => {
+    toast({
+      title: "Add User",
+      description: "Add user functionality coming soon",
+    });
+  };
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
@@ -121,7 +140,7 @@ const AdminDashboard = () => {
                       <CardTitle>User Management</CardTitle>
                       <CardDescription>Manage all registered users</CardDescription>
                     </div>
-                    <Button>Add User</Button>
+                    <Button onClick={handleAddUser}>Add User</Button>
                   </div>
                 </CardHeader>
                 <CardContent>

@@ -20,16 +20,16 @@ const BookAppointment = () => {
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [selectedTimeSlot, setSelectedTimeSlot] = useState<string>("");
 
-  // Mock doctor data - in production, fetch based on doctorId
+  // Get doctor data from URL params
   const doctor = {
     id: doctorId,
-    name: "Dr. Keshav Bhat",
-    qualification: "BAMS, PG in Dermatology",
-    specialization: "Kaya Chikitsa, Skin & Hair Care",
-    experience: "8 years",
-    rating: 4.6,
-    reviews: 98,
-    consultationFee: "₹450",
+    name: searchParams.get("doctorName") || "Dr. Keshav Bhat",
+    qualification: searchParams.get("qualification") || "BAMS, PG in Dermatology",
+    specialization: searchParams.get("specialization") || "Kaya Chikitsa, Skin & Hair Care",
+    experience: searchParams.get("experience") || "8 years",
+    rating: parseFloat(searchParams.get("rating") || "4.6"),
+    reviews: parseInt(searchParams.get("reviews") || "98"),
+    consultationFee: searchParams.get("fee") || "₹450",
     clinic: {
       name: "Ayur Skin Clinic",
       address: "BC Road, Puttur - 574201",
@@ -61,6 +61,20 @@ const BookAppointment = () => {
       });
       return;
     }
+
+    // Save appointment to localStorage
+    const appointments = JSON.parse(localStorage.getItem("userAppointments") || "[]");
+    const newAppointment = {
+      id: Date.now(),
+      doctor: doctor.name,
+      clinic: doctor.clinic.name,
+      date: selectedDate.toLocaleDateString(),
+      time: selectedTimeSlot,
+      type: "In-Person",
+      status: "Confirmed",
+    };
+    appointments.push(newAppointment);
+    localStorage.setItem("userAppointments", JSON.stringify(appointments));
 
     toast({
       title: "Appointment Booked!",

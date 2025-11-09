@@ -11,14 +11,22 @@ import { useState, useEffect } from "react";
 const Navbar = () => {
   const navigate = useNavigate();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [isDoctorLoggedIn, setIsDoctorLoggedIn] = useState(false);
+  const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(false);
 
   useEffect(() => {
     setIsLoggedIn(localStorage.getItem("isLoggedIn") === "true");
+    setIsDoctorLoggedIn(localStorage.getItem("isDoctorLoggedIn") === "true");
+    setIsAdminLoggedIn(localStorage.getItem("isAdminLoggedIn") === "true");
   }, []);
 
   const handleLogout = () => {
     localStorage.removeItem("isLoggedIn");
+    localStorage.removeItem("isDoctorLoggedIn");
+    localStorage.removeItem("isAdminLoggedIn");
     setIsLoggedIn(false);
+    setIsDoctorLoggedIn(false);
+    setIsAdminLoggedIn(false);
     navigate("/");
   };
 
@@ -52,6 +60,30 @@ const Navbar = () => {
               <Link to="/dashboard">
                 <Button variant="ghost" size="icon" className="rounded-full">
                   <span className="text-sm font-semibold">U</span>
+                </Button>
+              </Link>
+              <Button variant="outline" onClick={handleLogout}>
+                <LogOut className="h-4 w-4 mr-2" />
+                Logout
+              </Button>
+            </>
+          ) : isDoctorLoggedIn ? (
+            <>
+              <Link to="/doctor-dashboard">
+                <Button variant="ghost" size="icon" className="rounded-full">
+                  <span className="text-sm font-semibold">D</span>
+                </Button>
+              </Link>
+              <Button variant="outline" onClick={handleLogout}>
+                <LogOut className="h-4 w-4 mr-2" />
+                Logout
+              </Button>
+            </>
+          ) : isAdminLoggedIn ? (
+            <>
+              <Link to="/admin">
+                <Button variant="ghost" size="icon" className="rounded-full">
+                  <span className="text-sm font-semibold">A</span>
                 </Button>
               </Link>
               <Button variant="outline" onClick={handleLogout}>
@@ -98,6 +130,30 @@ const Navbar = () => {
                     <Link to="/dashboard">
                       <Button variant="outline" size="icon" className="rounded-full mx-auto">
                         <span className="text-sm font-semibold">U</span>
+                      </Button>
+                    </Link>
+                    <Button variant="outline" className="w-full" onClick={handleLogout}>
+                      <LogOut className="h-4 w-4 mr-2" />
+                      Logout
+                    </Button>
+                  </>
+                ) : isDoctorLoggedIn ? (
+                  <>
+                    <Link to="/doctor-dashboard">
+                      <Button variant="outline" size="icon" className="rounded-full mx-auto">
+                        <span className="text-sm font-semibold">D</span>
+                      </Button>
+                    </Link>
+                    <Button variant="outline" className="w-full" onClick={handleLogout}>
+                      <LogOut className="h-4 w-4 mr-2" />
+                      Logout
+                    </Button>
+                  </>
+                ) : isAdminLoggedIn ? (
+                  <>
+                    <Link to="/admin">
+                      <Button variant="outline" size="icon" className="rounded-full mx-auto">
+                        <span className="text-sm font-semibold">A</span>
                       </Button>
                     </Link>
                     <Button variant="outline" className="w-full" onClick={handleLogout}>

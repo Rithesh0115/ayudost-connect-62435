@@ -1,3 +1,5 @@
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -5,29 +7,41 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Calendar, FileText, User, Bell, Heart, Users } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 const Dashboard = () => {
-  // Mock data
-  const upcomingAppointments = [
-    {
-      id: 1,
-      doctor: "Dr. Priya Sharma",
-      clinic: "Vedic Ayurveda Center",
-      date: "2025-11-15",
-      time: "10:00 AM",
-      type: "In-Person",
-      status: "Confirmed",
-    },
-    {
-      id: 2,
-      doctor: "Dr. Rajesh Kumar",
-      clinic: "Nature's Healing Clinic",
-      date: "2025-11-20",
-      time: "2:30 PM",
-      type: "Teleconsultation",
-      status: "Confirmed",
-    },
-  ];
+  const navigate = useNavigate();
+  const { toast } = useToast();
+  const [upcomingAppointments, setUpcomingAppointments] = useState<any[]>([]);
+
+  useEffect(() => {
+    // Check if user is logged in
+    if (localStorage.getItem("isLoggedIn") !== "true") {
+      navigate("/auth");
+      return;
+    }
+
+    // Load appointments from localStorage
+    const savedAppointments = JSON.parse(localStorage.getItem("userAppointments") || "[]");
+    setUpcomingAppointments(savedAppointments);
+  }, [navigate]);
+
+  const handleReschedule = (appointmentId: number) => {
+    toast({
+      title: "Reschedule Appointment",
+      description: "Rescheduling functionality coming soon",
+    });
+  };
+
+  const handleCancel = (appointmentId: number) => {
+    const appointments = upcomingAppointments.filter(apt => apt.id !== appointmentId);
+    setUpcomingAppointments(appointments);
+    localStorage.setItem("userAppointments", JSON.stringify(appointments));
+    toast({
+      title: "Appointment Cancelled",
+      description: "Your appointment has been cancelled successfully",
+    });
+  };
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -53,10 +67,10 @@ const Dashboard = () => {
                   <Calendar className="h-4 w-4 text-muted-foreground" />
                 </div>
               </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{upcomingAppointments.length}</div>
-                <p className="text-xs text-muted-foreground">Appointments</p>
-              </CardContent>
+                <CardContent>
+                  <div className="text-2xl font-bold">{upcomingAppointments?.length || 0}</div>
+                  <p className="text-xs text-muted-foreground">Appointments</p>
+                </CardContent>
             </Card>
 
             <Card>
@@ -115,26 +129,30 @@ const Dashboard = () => {
                   <CardDescription>Your scheduled consultations</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  {upcomingAppointments.map((appointment) => (
-                    <div key={appointment.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 border border-border rounded-lg">
-                      <div className="space-y-1 mb-4 sm:mb-0">
-                        <h3 className="font-semibold">{appointment.doctor}</h3>
-                        <p className="text-sm text-muted-foreground">{appointment.clinic}</p>
-                        <div className="flex items-center gap-2 mt-2">
-                          <Badge variant="outline">{appointment.type}</Badge>
-                          <Badge variant="secondary">{appointment.status}</Badge>
+                  {upcomingAppointments.length > 0 ? (
+                    upcomingAppointments.map((appointment) => (
+                      <div key={appointment.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 border border-border rounded-lg">
+                        <div className="space-y-1 mb-4 sm:mb-0">
+                          <h3 className="font-semibold">{appointment.doctor}</h3>
+                          <p className="text-sm text-muted-foreground">{appointment.clinic}</p>
+                          <div className="flex items-center gap-2 mt-2">
+                            <Badge variant="outline">{appointment.type}</Badge>
+                            <Badge variant="secondary">{appointment.status}</Badge>
+                          </div>
+                        </div>
+                        <div className="text-left sm:text-right space-y-2">
+                          <p className="font-medium">{appointment.date}</p>
+                          <p className="text-sm text-muted-foreground">{appointment.time}</p>
+                          <div className="flex gap-2 mt-2">
+                            <Button variant="outline" size="sm" onClick={() => handleReschedule(appointment.id)}>Reschedule</Button>
+                            <Button variant="destructive" size="sm" onClick={() => handleCancel(appointment.id)}>Cancel</Button>
+                          </div>
                         </div>
                       </div>
-                      <div className="text-left sm:text-right space-y-2">
-                        <p className="font-medium">{appointment.date}</p>
-                        <p className="text-sm text-muted-foreground">{appointment.time}</p>
-                        <div className="flex gap-2 mt-2">
-                          <Button variant="outline" size="sm">Reschedule</Button>
-                          <Button variant="destructive" size="sm">Cancel</Button>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
+                    ))
+                  ) : (
+                    <p className="text-muted-foreground text-center py-8">No appointments booked yet. Book your first appointment to get started!</p>
+                  )}
                 </CardContent>
               </Card>
             </TabsContent>
