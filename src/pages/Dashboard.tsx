@@ -6,6 +6,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Calendar, FileText, User, Bell, Heart, Users } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
@@ -13,6 +16,10 @@ const Dashboard = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [upcomingAppointments, setUpcomingAppointments] = useState<any[]>([]);
+  const [rescheduleDialog, setRescheduleDialog] = useState(false);
+  const [selectedAppointment, setSelectedAppointment] = useState<any>(null);
+  const [newDate, setNewDate] = useState("");
+  const [newTime, setNewTime] = useState("");
 
   useEffect(() => {
     // Check if user is logged in
@@ -27,10 +34,41 @@ const Dashboard = () => {
   }, [navigate]);
 
   const handleReschedule = (appointmentId: number) => {
+    const appointment = upcomingAppointments.find(apt => apt.id === appointmentId);
+    if (appointment) {
+      setSelectedAppointment(appointment);
+      setNewDate(appointment.date);
+      setNewTime(appointment.time);
+      setRescheduleDialog(true);
+    }
+  };
+
+  const confirmReschedule = () => {
+    if (!newDate || !newTime) {
+      toast({
+        title: "Error",
+        description: "Please select both date and time",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const updatedAppointments = upcomingAppointments.map(apt => 
+      apt.id === selectedAppointment.id 
+        ? { ...apt, date: newDate, time: newTime }
+        : apt
+    );
+    
+    setUpcomingAppointments(updatedAppointments);
+    localStorage.setItem("userAppointments", JSON.stringify(updatedAppointments));
+    
     toast({
-      title: "Reschedule Appointment",
-      description: "Rescheduling functionality coming soon",
+      title: "Appointment Rescheduled",
+      description: `Your appointment has been rescheduled to ${newDate} at ${newTime}`,
     });
+    
+    setRescheduleDialog(false);
+    setSelectedAppointment(null);
   };
 
   const handleCancel = (appointmentId: number) => {
@@ -197,6 +235,46 @@ const Dashboard = () => {
       </main>
 
       <Footer />
+
+      <Dialog open={rescheduleDialog} onOpenChange={setRescheduleDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Reschedule Appointment</DialogTitle>
+            <DialogDescription>
+              Change the date and time for your appointment with {selectedAppointment?.doctor}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="newDate">New Date</Label>
+              <Input
+                id="newDate"
+                type="date"
+                value={newDate}
+                onChange={(e) => setNewDate(e.target.value)}
+                min={new Date().toISOString().split('T')[0]}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="newTime">New Time</Label>
+              <Input
+                id="newTime"
+                type="time"
+                value={newTime}
+                onChange={(e) => setNewTime(e.target.value)}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setRescheduleDialog(false)}>
+              Cancel
+            </Button>
+            <Button onClick={confirmReschedule}>
+              Confirm Reschedule
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
