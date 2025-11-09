@@ -9,24 +9,24 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Calendar, FileText, User, Bell, Heart, Users } from "lucide-react";
+import { Calendar, FileText, User, Bell, Heart, Users, LogOut } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 const Dashboard = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const [user, setUser] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
   const [upcomingAppointments, setUpcomingAppointments] = useState<any[]>([]);
   const [rescheduleDialog, setRescheduleDialog] = useState(false);
   const [selectedAppointment, setSelectedAppointment] = useState<any>(null);
   const [newDate, setNewDate] = useState("");
   const [newTime, setNewTime] = useState("");
   const [profile, setProfile] = useState({
-    name: "John Doe",
-    email: "john.doe@example.com",
-    phone: "+91 98765 43210",
-    address: "123 Main Street, Puttur",
-    dateOfBirth: "1990-01-01",
-    bloodGroup: "O+",
+    full_name: "",
+    email: "",
+    phone: "",
   });
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [medicalRecords, setMedicalRecords] = useState<any[]>([]);
@@ -37,35 +37,83 @@ const Dashboard = () => {
   const [newPrescription, setNewPrescription] = useState({ medicine: "", dosage: "", frequency: "", duration: "", prescribedBy: "", date: "" });
 
   useEffect(() => {
-    // Check if user is logged in
-    if (localStorage.getItem("isLoggedIn") !== "true") {
+    checkUser();
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!session) {
+        navigate("/auth");
+      } else {
+        setUser(session.user);
+        loadUserData(session.user.id);
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, [navigate]);
+
+  const checkUser = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
       navigate("/auth");
       return;
     }
+    setUser(session.user);
+    await loadUserData(session.user.id);
+    setLoading(false);
+  };
 
-    // Load appointments from localStorage
-    const savedAppointments = JSON.parse(localStorage.getItem("userAppointments") || "[]");
-    setUpcomingAppointments(savedAppointments);
+  const loadUserData = async (userId: string) => {
+    try {
+      // Load profile
+      const { data: profileData } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single();
+      
+      if (profileData) {
+        setProfile({
+          full_name: profileData.full_name || "",
+          email: profileData.email || "",
+          phone: profileData.phone || "",
+        });
+      }
 
-    // Load profile from localStorage
-    const savedProfile = localStorage.getItem("userProfile");
-    if (savedProfile) {
-      setProfile(JSON.parse(savedProfile));
+      // Load appointments
+      const { data: appointmentsData } = await supabase
+        .from('appointments')
+        .select('*')
+        .eq('user_id', userId)
+        .order('date', { ascending: true });
+      
+      if (appointmentsData) {
+        setUpcomingAppointments(appointmentsData);
+      }
+
+      // Load prescriptions
+      const { data: prescriptionsData } = await supabase
+        .from('prescriptions')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false });
+      
+      if (prescriptionsData) {
+        setPrescriptions(prescriptionsData);
+      }
+    } catch (error) {
+      console.error('Error loading user data:', error);
     }
+  };
 
-    // Load medical records and prescriptions
-    const savedRecords = localStorage.getItem("medicalRecords");
-    if (savedRecords) {
-      setMedicalRecords(JSON.parse(savedRecords));
-    }
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    navigate("/auth");
+  };
 
-    const savedPrescriptions = localStorage.getItem("prescriptions");
-    if (savedPrescriptions) {
-      setPrescriptions(JSON.parse(savedPrescriptions));
-    }
-  }, [navigate]);
+  if (loading) {
+    return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
+  }
 
-  const handleReschedule = (appointmentId: number) => {
+  const handleReschedule = (appointmentId: string) => {
     const appointment = upcomingAppointments.find(apt => apt.id === appointmentId);
     if (appointment) {
       setSelectedAppointment(appointment);
@@ -75,7 +123,7 @@ const Dashboard = () => {
     }
   };
 
-  const confirmReschedule = () => {
+  const confirmReschedule = async () => {
     if (!newDate || !newTime) {
       toast({
         title: "Error",
@@ -85,41 +133,80 @@ const Dashboard = () => {
       return;
     }
 
-    const updatedAppointments = upcomingAppointments.map(apt => 
-      apt.id === selectedAppointment.id 
-        ? { ...apt, date: newDate, time: newTime }
-        : apt
-    );
-    
-    setUpcomingAppointments(updatedAppointments);
-    localStorage.setItem("userAppointments", JSON.stringify(updatedAppointments));
-    
-    toast({
-      title: "Appointment Rescheduled",
-      description: `Your appointment has been rescheduled to ${newDate} at ${newTime}`,
-    });
-    
-    setRescheduleDialog(false);
-    setSelectedAppointment(null);
+    try {
+      const { error } = await supabase
+        .from('appointments')
+        .update({ date: newDate, time: newTime })
+        .eq('id', selectedAppointment.id);
+
+      if (error) throw error;
+
+      await loadUserData(user.id);
+      
+      toast({
+        title: "Appointment Rescheduled",
+        description: `Your appointment has been rescheduled to ${newDate} at ${newTime}`,
+      });
+      
+      setRescheduleDialog(false);
+      setSelectedAppointment(null);
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to reschedule appointment",
+        variant: "destructive",
+      });
+    }
   };
 
-  const handleCancel = (appointmentId: number) => {
-    const appointments = upcomingAppointments.filter(apt => apt.id !== appointmentId);
-    setUpcomingAppointments(appointments);
-    localStorage.setItem("userAppointments", JSON.stringify(appointments));
-    toast({
-      title: "Appointment Cancelled",
-      description: "Your appointment has been cancelled successfully",
-    });
+  const handleCancel = async (appointmentId: string) => {
+    try {
+      const { error } = await supabase
+        .from('appointments')
+        .delete()
+        .eq('id', appointmentId);
+
+      if (error) throw error;
+
+      await loadUserData(user.id);
+      
+      toast({
+        title: "Appointment Cancelled",
+        description: "Your appointment has been cancelled successfully",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to cancel appointment",
+        variant: "destructive",
+      });
+    }
   };
 
-  const handleSaveProfile = () => {
-    localStorage.setItem("userProfile", JSON.stringify(profile));
-    setIsEditingProfile(false);
-    toast({
-      title: "Profile Updated",
-      description: "Your profile has been saved successfully",
-    });
+  const handleSaveProfile = async () => {
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          full_name: profile.full_name,
+          phone: profile.phone,
+        })
+        .eq('id', user.id);
+
+      if (error) throw error;
+
+      setIsEditingProfile(false);
+      toast({
+        title: "Profile Updated",
+        description: "Your profile has been saved successfully",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update profile",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleProfileChange = (field: string, value: string) => {
@@ -154,7 +241,7 @@ const Dashboard = () => {
     setAddRecordDialog(false);
   };
 
-  const handleAddPrescription = () => {
+  const handleAddPrescription = async () => {
     if (!newPrescription.medicine || !newPrescription.dosage || !newPrescription.frequency || !newPrescription.duration) {
       toast({
         title: "Error",
@@ -164,23 +251,37 @@ const Dashboard = () => {
       return;
     }
 
-    const prescription = {
-      id: Date.now(),
-      ...newPrescription,
-      status: "Active",
-    };
+    try {
+      const { error } = await supabase
+        .from('prescriptions')
+        .insert({
+          user_id: user.id,
+          medication: newPrescription.medicine,
+          dosage: newPrescription.dosage,
+          frequency: newPrescription.frequency,
+          doctor: newPrescription.prescribedBy,
+          start_date: newPrescription.date || new Date().toISOString().split('T')[0],
+          end_date: null,
+        });
 
-    const updatedPrescriptions = [...prescriptions, prescription];
-    setPrescriptions(updatedPrescriptions);
-    localStorage.setItem("prescriptions", JSON.stringify(updatedPrescriptions));
+      if (error) throw error;
 
-    toast({
-      title: "Prescription Added",
-      description: "Prescription has been added successfully",
-    });
+      await loadUserData(user.id);
 
-    setNewPrescription({ medicine: "", dosage: "", frequency: "", duration: "", prescribedBy: "", date: "" });
-    setAddPrescriptionDialog(false);
+      toast({
+        title: "Prescription Added",
+        description: "Prescription has been added successfully",
+      });
+
+      setNewPrescription({ medicine: "", dosage: "", frequency: "", duration: "", prescribedBy: "", date: "" });
+      setAddPrescriptionDialog(false);
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to add prescription",
+        variant: "destructive",
+      });
+    }
   };
 
   const totalAppointments = upcomingAppointments?.length || 0;
@@ -193,13 +294,19 @@ const Dashboard = () => {
       
       <main className="flex-1 py-12 px-4 bg-muted/30">
         <div className="container mx-auto max-w-7xl">
-          <div className="mb-8">
-            <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-2">
-              Welcome back, {profile.name.split(' ')[0]}!
-            </h1>
-            <p className="text-muted-foreground">
-              Manage your appointments and health records
-            </p>
+          <div className="mb-8 flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-2">
+                Welcome back, {profile.full_name?.split(' ')[0] || 'User'}!
+              </h1>
+              <p className="text-muted-foreground">
+                Manage your appointments and health records
+              </p>
+            </div>
+            <Button variant="outline" onClick={handleLogout}>
+              <LogOut className="h-4 w-4 mr-2" />
+              Logout
+            </Button>
           </div>
 
           {/* Quick Stats */}
@@ -284,10 +391,9 @@ const Dashboard = () => {
                         upcomingAppointments.filter(apt => new Date(apt.date) >= new Date()).map((appointment) => (
                           <div key={appointment.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 border border-border rounded-lg">
                             <div className="space-y-1 mb-4 sm:mb-0">
-                              <h3 className="font-semibold">{appointment.doctor}</h3>
-                              <p className="text-sm text-muted-foreground">{appointment.clinic}</p>
+                              <h3 className="font-semibold">{appointment.doctor_name}</h3>
+                              <p className="text-sm text-muted-foreground">{appointment.clinic_name}</p>
                               <div className="flex items-center gap-2 mt-2">
-                                <Badge variant="outline">{appointment.type}</Badge>
                                 <Badge variant="secondary">{appointment.status}</Badge>
                               </div>
                             </div>
@@ -311,10 +417,9 @@ const Dashboard = () => {
                         upcomingAppointments.filter(apt => new Date(apt.date) < new Date()).map((appointment) => (
                           <div key={appointment.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 border border-border rounded-lg opacity-75">
                             <div className="space-y-1 mb-4 sm:mb-0">
-                              <h3 className="font-semibold">{appointment.doctor}</h3>
-                              <p className="text-sm text-muted-foreground">{appointment.clinic}</p>
+                              <h3 className="font-semibold">{appointment.doctor_name}</h3>
+                              <p className="text-sm text-muted-foreground">{appointment.clinic_name}</p>
                               <div className="flex items-center gap-2 mt-2">
-                                <Badge variant="outline">{appointment.type}</Badge>
                                 <Badge variant="secondary">Completed</Badge>
                               </div>
                             </div>
@@ -388,14 +493,12 @@ const Dashboard = () => {
                       <div key={prescription.id} className="p-4 border border-border rounded-lg space-y-3">
                         <div className="flex items-start justify-between">
                           <div>
-                            <h3 className="font-semibold text-lg">{prescription.medicine}</h3>
-                            {prescription.prescribedBy && (
-                              <p className="text-sm text-muted-foreground">Prescribed by {prescription.prescribedBy}</p>
+                            <h3 className="font-semibold text-lg">{prescription.medication}</h3>
+                            {prescription.doctor && (
+                              <p className="text-sm text-muted-foreground">Prescribed by {prescription.doctor}</p>
                             )}
                           </div>
-                          <Badge variant={prescription.status === "Active" ? "default" : "secondary"}>
-                            {prescription.status}
-                          </Badge>
+                          <Badge variant="default">Active</Badge>
                         </div>
                         <div className="grid grid-cols-2 gap-2 text-sm">
                           <div>
@@ -404,12 +507,9 @@ const Dashboard = () => {
                           <div>
                             <span className="text-muted-foreground">Frequency:</span> {prescription.frequency}
                           </div>
-                          <div>
-                            <span className="text-muted-foreground">Duration:</span> {prescription.duration}
-                          </div>
-                          {prescription.date && (
+                          {prescription.start_date && (
                             <div>
-                              <span className="text-muted-foreground">Date:</span> {prescription.date}
+                              <span className="text-muted-foreground">Start Date:</span> {prescription.start_date}
                             </div>
                           )}
                         </div>
@@ -452,8 +552,8 @@ const Dashboard = () => {
                       <Label htmlFor="name">Full Name</Label>
                       <Input
                         id="name"
-                        value={profile.name}
-                        onChange={(e) => handleProfileChange("name", e.target.value)}
+                        value={profile.full_name}
+                        onChange={(e) => handleProfileChange("full_name", e.target.value)}
                         disabled={!isEditingProfile}
                       />
                     </div>
@@ -463,8 +563,7 @@ const Dashboard = () => {
                         id="email"
                         type="email"
                         value={profile.email}
-                        onChange={(e) => handleProfileChange("email", e.target.value)}
-                        disabled={!isEditingProfile}
+                        disabled={true}
                       />
                     </div>
                     <div className="space-y-2">
@@ -475,36 +574,6 @@ const Dashboard = () => {
                         onChange={(e) => handleProfileChange("phone", e.target.value)}
                         disabled={!isEditingProfile}
                       />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="address">Address</Label>
-                      <Input
-                        id="address"
-                        value={profile.address}
-                        onChange={(e) => handleProfileChange("address", e.target.value)}
-                        disabled={!isEditingProfile}
-                      />
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="dob">Date of Birth</Label>
-                        <Input
-                          id="dob"
-                          type="date"
-                          value={profile.dateOfBirth}
-                          onChange={(e) => handleProfileChange("dateOfBirth", e.target.value)}
-                          disabled={!isEditingProfile}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="bloodGroup">Blood Group</Label>
-                        <Input
-                          id="bloodGroup"
-                          value={profile.bloodGroup}
-                          onChange={(e) => handleProfileChange("bloodGroup", e.target.value)}
-                          disabled={!isEditingProfile}
-                        />
-                      </div>
                     </div>
                   </div>
                 </CardContent>

@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Star, MapPin, Award, Calendar as CalendarIcon } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
 
 const BookAppointment = () => {
   const { doctorId } = useParams();
@@ -52,7 +53,7 @@ const BookAppointment = () => {
     { day: "Sat", hours: "10:00-13:00" },
   ];
 
-  const handleBookAppointment = () => {
+  const handleBookAppointment = async () => {
     if (!selectedDate || !selectedTimeSlot) {
       toast({
         title: "Missing Information",
@@ -62,29 +63,49 @@ const BookAppointment = () => {
       return;
     }
 
-    // Save appointment to localStorage
-    const appointments = JSON.parse(localStorage.getItem("userAppointments") || "[]");
-    const newAppointment = {
-      id: Date.now(),
-      doctor: doctor.name,
-      clinic: doctor.clinic.name,
-      date: selectedDate.toLocaleDateString(),
-      time: selectedTimeSlot,
-      type: "In-Person",
-      status: "Confirmed",
-    };
-    appointments.push(newAppointment);
-    localStorage.setItem("userAppointments", JSON.stringify(appointments));
+    try {
+      // Check if user is logged in
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast({
+          title: "Authentication Required",
+          description: "Please login to book an appointment",
+          variant: "destructive",
+        });
+        navigate("/auth");
+        return;
+      }
 
-    toast({
-      title: "Appointment Booked!",
-      description: `Your appointment with ${doctor.name} has been confirmed for ${selectedDate.toLocaleDateString()} at ${selectedTimeSlot}`,
-    });
-    
-    // Navigate to dashboard
-    setTimeout(() => {
-      navigate("/dashboard");
-    }, 2000);
+      // Save appointment to database
+      const { error } = await supabase
+        .from('appointments')
+        .insert({
+          user_id: session.user.id,
+          doctor_name: doctor.name,
+          clinic_name: doctor.clinic.name,
+          date: selectedDate.toLocaleDateString('en-CA'), // YYYY-MM-DD format
+          time: selectedTimeSlot,
+          status: 'upcoming',
+        });
+
+      if (error) throw error;
+
+      toast({
+        title: "Appointment Booked!",
+        description: `Your appointment with ${doctor.name} has been confirmed for ${selectedDate.toLocaleDateString()} at ${selectedTimeSlot}`,
+      });
+      
+      // Navigate to dashboard
+      setTimeout(() => {
+        navigate("/dashboard");
+      }, 2000);
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to book appointment",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
