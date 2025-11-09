@@ -20,6 +20,15 @@ const Dashboard = () => {
   const [selectedAppointment, setSelectedAppointment] = useState<any>(null);
   const [newDate, setNewDate] = useState("");
   const [newTime, setNewTime] = useState("");
+  const [profile, setProfile] = useState({
+    name: "John Doe",
+    email: "john.doe@example.com",
+    phone: "+91 98765 43210",
+    address: "123 Main Street, Puttur",
+    dateOfBirth: "1990-01-01",
+    bloodGroup: "O+",
+  });
+  const [isEditingProfile, setIsEditingProfile] = useState(false);
 
   useEffect(() => {
     // Check if user is logged in
@@ -31,6 +40,12 @@ const Dashboard = () => {
     // Load appointments from localStorage
     const savedAppointments = JSON.parse(localStorage.getItem("userAppointments") || "[]");
     setUpcomingAppointments(savedAppointments);
+
+    // Load profile from localStorage
+    const savedProfile = localStorage.getItem("userProfile");
+    if (savedProfile) {
+      setProfile(JSON.parse(savedProfile));
+    }
   }, [navigate]);
 
   const handleReschedule = (appointmentId: number) => {
@@ -81,6 +96,19 @@ const Dashboard = () => {
     });
   };
 
+  const handleSaveProfile = () => {
+    localStorage.setItem("userProfile", JSON.stringify(profile));
+    setIsEditingProfile(false);
+    toast({
+      title: "Profile Updated",
+      description: "Your profile has been saved successfully",
+    });
+  };
+
+  const handleProfileChange = (field: string, value: string) => {
+    setProfile(prev => ({ ...prev, [field]: value }));
+  };
+
   return (
     <div className="min-h-screen flex flex-col">
       <Navbar />
@@ -89,7 +117,7 @@ const Dashboard = () => {
         <div className="container mx-auto max-w-7xl">
           <div className="mb-8">
             <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-2">
-              Welcome back, John!
+              Welcome back, {profile.name.split(' ')[0]}!
             </h1>
             <p className="text-muted-foreground">
               Manage your appointments and health records
@@ -222,11 +250,88 @@ const Dashboard = () => {
             <TabsContent value="profile">
               <Card>
                 <CardHeader>
-                  <CardTitle>Profile Settings</CardTitle>
-                  <CardDescription>Manage your account information</CardDescription>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <CardTitle>Profile Settings</CardTitle>
+                      <CardDescription>Manage your account information</CardDescription>
+                    </div>
+                    {!isEditingProfile ? (
+                      <Button onClick={() => setIsEditingProfile(true)}>
+                        Edit Profile
+                      </Button>
+                    ) : (
+                      <div className="flex gap-2">
+                        <Button variant="outline" onClick={() => setIsEditingProfile(false)}>
+                          Cancel
+                        </Button>
+                        <Button onClick={handleSaveProfile}>
+                          Save Changes
+                        </Button>
+                      </div>
+                    )}
+                  </div>
                 </CardHeader>
-                <CardContent>
-                  <p className="text-muted-foreground">Profile settings coming soon.</p>
+                <CardContent className="space-y-6">
+                  <div className="grid gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="name">Full Name</Label>
+                      <Input
+                        id="name"
+                        value={profile.name}
+                        onChange={(e) => handleProfileChange("name", e.target.value)}
+                        disabled={!isEditingProfile}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="email">Email</Label>
+                      <Input
+                        id="email"
+                        type="email"
+                        value={profile.email}
+                        onChange={(e) => handleProfileChange("email", e.target.value)}
+                        disabled={!isEditingProfile}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="phone">Phone Number</Label>
+                      <Input
+                        id="phone"
+                        value={profile.phone}
+                        onChange={(e) => handleProfileChange("phone", e.target.value)}
+                        disabled={!isEditingProfile}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="address">Address</Label>
+                      <Input
+                        id="address"
+                        value={profile.address}
+                        onChange={(e) => handleProfileChange("address", e.target.value)}
+                        disabled={!isEditingProfile}
+                      />
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="dob">Date of Birth</Label>
+                        <Input
+                          id="dob"
+                          type="date"
+                          value={profile.dateOfBirth}
+                          onChange={(e) => handleProfileChange("dateOfBirth", e.target.value)}
+                          disabled={!isEditingProfile}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="bloodGroup">Blood Group</Label>
+                        <Input
+                          id="bloodGroup"
+                          value={profile.bloodGroup}
+                          onChange={(e) => handleProfileChange("bloodGroup", e.target.value)}
+                          disabled={!isEditingProfile}
+                        />
+                      </div>
+                    </div>
+                  </div>
                 </CardContent>
               </Card>
             </TabsContent>
