@@ -16,6 +16,9 @@ const DoctorDashboard = () => {
   const [selectedAppointment, setSelectedAppointment] = useState<any>(null);
   const [showDetailsDialog, setShowDetailsDialog] = useState(false);
   const [showConsultationDialog, setShowConsultationDialog] = useState(false);
+  const [selectedPatient, setSelectedPatient] = useState<any>(null);
+  const [showPatientProfileDialog, setShowPatientProfileDialog] = useState(false);
+  const [showEditScheduleDialog, setShowEditScheduleDialog] = useState(false);
 
   useEffect(() => {
     // Check if doctor is logged in
@@ -208,10 +211,8 @@ const DoctorDashboard = () => {
                         <Button 
                           size="sm" 
                           onClick={() => {
-                            toast({
-                              title: "Patient Profile",
-                              description: `Viewing ${patient.name}'s medical history`,
-                            });
+                            setSelectedPatient(patient);
+                            setShowPatientProfileDialog(true);
                           }}
                         >
                           View Profile
@@ -255,12 +256,7 @@ const DoctorDashboard = () => {
                   ))}
                   <Button 
                     className="w-full mt-4"
-                    onClick={() => {
-                      toast({
-                        title: "Edit Schedule",
-                        description: "Schedule editor will open here",
-                      });
-                    }}
+                    onClick={() => setShowEditScheduleDialog(true)}
                   >
                     Edit Availability
                   </Button>
@@ -389,6 +385,134 @@ const DoctorDashboard = () => {
               });
             }}>
               Begin Consultation
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Patient Profile Dialog */}
+      <Dialog open={showPatientProfileDialog} onOpenChange={setShowPatientProfileDialog}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Patient Profile</DialogTitle>
+            <DialogDescription>Detailed medical history and information</DialogDescription>
+          </DialogHeader>
+          {selectedPatient && (
+            <div className="space-y-6">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">Full Name</p>
+                  <p className="text-base font-semibold">{selectedPatient.name}</p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">Age</p>
+                  <p className="text-base font-semibold">{selectedPatient.age} years</p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">Gender</p>
+                  <p className="text-base font-semibold">{selectedPatient.gender}</p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">Contact</p>
+                  <div className="flex items-center gap-2">
+                    <Phone className="h-3 w-3 text-muted-foreground" />
+                    <p className="text-sm">{selectedPatient.phone}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="border-t pt-4">
+                <p className="text-sm font-medium text-muted-foreground mb-2">Primary Condition</p>
+                <Badge variant="secondary" className="text-base">{selectedPatient.condition}</Badge>
+              </div>
+
+              <div className="border-t pt-4">
+                <p className="text-sm font-medium text-muted-foreground mb-3">Medical History</p>
+                <div className="space-y-3">
+                  <div className="p-3 border border-border rounded-lg">
+                    <div className="flex items-center justify-between mb-1">
+                      <p className="font-medium">Last Visit</p>
+                      <p className="text-sm text-muted-foreground">{selectedPatient.lastVisit}</p>
+                    </div>
+                    <p className="text-sm text-muted-foreground">Routine checkup and medication review</p>
+                  </div>
+                  <div className="p-3 border border-border rounded-lg">
+                    <div className="flex items-center justify-between mb-1">
+                      <p className="font-medium">Medications</p>
+                      <Badge variant="outline">Active</Badge>
+                    </div>
+                    <ul className="text-sm text-muted-foreground space-y-1">
+                      <li>• Medication A - 500mg daily</li>
+                      <li>• Medication B - 10mg twice daily</li>
+                    </ul>
+                  </div>
+                  <div className="p-3 border border-border rounded-lg">
+                    <div className="flex items-center justify-between mb-1">
+                      <p className="font-medium">Allergies</p>
+                    </div>
+                    <p className="text-sm text-muted-foreground">Penicillin, Sulfa drugs</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowPatientProfileDialog(false)}>Close</Button>
+            <Button onClick={() => {
+              toast({
+                title: "Medical Records Updated",
+                description: `${selectedPatient?.name}'s profile accessed`,
+              });
+            }}>
+              Edit Record
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Schedule Dialog */}
+      <Dialog open={showEditScheduleDialog} onOpenChange={setShowEditScheduleDialog}>
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Edit Availability</DialogTitle>
+            <DialogDescription>Manage your working hours and availability</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            {weeklySchedule.map((day) => (
+              <div key={day.day} className="border border-border rounded-lg p-4">
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="font-semibold">{day.day}</h3>
+                  <Button variant="outline" size="sm">Add Slot</Button>
+                </div>
+                <div className="space-y-2">
+                  {day.slots.map((slot, idx) => (
+                    <div key={idx} className="flex items-center justify-between p-3 bg-muted rounded-lg">
+                      <div className="flex items-center gap-2">
+                        <Clock className="h-4 w-4 text-muted-foreground" />
+                        <span className="text-sm font-medium">{slot.time}</span>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Badge variant={slot.status === "Available" ? "default" : "secondary"} className="text-xs">
+                          {slot.status}
+                        </Badge>
+                        <Button variant="ghost" size="sm">Edit</Button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowEditScheduleDialog(false)}>Cancel</Button>
+            <Button onClick={() => {
+              setShowEditScheduleDialog(false);
+              toast({
+                title: "Schedule Updated",
+                description: "Your availability has been saved successfully",
+              });
+            }}>
+              Save Changes
             </Button>
           </DialogFooter>
         </DialogContent>
