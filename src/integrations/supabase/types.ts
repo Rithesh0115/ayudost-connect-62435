@@ -14,7 +14,108 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      appointments: {
+        Row: {
+          clinic_name: string
+          created_at: string | null
+          date: string
+          doctor_name: string
+          id: string
+          status: string | null
+          time: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          clinic_name: string
+          created_at?: string | null
+          date: string
+          doctor_name: string
+          id?: string
+          status?: string | null
+          time: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          clinic_name?: string
+          created_at?: string | null
+          date?: string
+          doctor_name?: string
+          id?: string
+          status?: string | null
+          time?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      prescriptions: {
+        Row: {
+          created_at: string | null
+          doctor: string
+          dosage: string
+          end_date: string | null
+          frequency: string
+          id: string
+          medication: string
+          start_date: string
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          doctor: string
+          dosage: string
+          end_date?: string | null
+          frequency: string
+          id?: string
+          medication: string
+          start_date: string
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          doctor?: string
+          dosage?: string
+          end_date?: string | null
+          frequency?: string
+          id?: string
+          medication?: string
+          start_date?: string
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      profiles: {
+        Row: {
+          created_at: string | null
+          email: string | null
+          full_name: string | null
+          id: string
+          phone: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          email?: string | null
+          full_name?: string | null
+          id: string
+          phone?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          email?: string | null
+          full_name?: string | null
+          id?: string
+          phone?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
