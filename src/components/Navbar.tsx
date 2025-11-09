@@ -58,7 +58,7 @@ const Navbar = () => {
           {isLoggedIn ? (
             <>
               <Link to="/dashboard">
-                <Button variant="ghost" size="icon" className="rounded-full">
+                <Button variant="ghost" size="icon" className="rounded-full border-2 border-foreground">
                   <span className="text-sm font-semibold">U</span>
                 </Button>
               </Link>
