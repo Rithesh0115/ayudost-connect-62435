@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Calendar, FileText, User, Bell, Heart, Users, LogOut } from "lucide-react";
+import { Calendar, FileText, User, Bell, Heart, Users } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -104,10 +104,6 @@ const Dashboard = () => {
     }
   };
 
-  const handleLogout = async () => {
-    await supabase.auth.signOut();
-    navigate("/auth");
-  };
 
   if (loading) {
     return <div className="min-h-screen flex items-center justify-center">Loading...</div>;
@@ -294,19 +290,13 @@ const Dashboard = () => {
       
       <main className="flex-1 py-12 px-4 bg-muted/30">
         <div className="container mx-auto max-w-7xl">
-          <div className="mb-8 flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-2">
-                Welcome back, {profile.full_name?.split(' ')[0] || 'User'}!
-              </h1>
-              <p className="text-muted-foreground">
-                Manage your appointments and health records
-              </p>
-            </div>
-            <Button variant="outline" onClick={handleLogout}>
-              <LogOut className="h-4 w-4 mr-2" />
-              Logout
-            </Button>
+          <div className="mb-8">
+            <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-2">
+              Welcome back, {profile.full_name?.split(' ')[0] || 'User'}!
+            </h1>
+            <p className="text-muted-foreground">
+              Manage your appointments and health records
+            </p>
           </div>
 
           {/* Quick Stats */}

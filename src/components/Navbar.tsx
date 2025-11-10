@@ -8,6 +8,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 const Navbar = () => {
   const navigate = useNavigate();
@@ -16,13 +17,28 @@ const Navbar = () => {
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(false);
 
   useEffect(() => {
-    setIsLoggedIn(localStorage.getItem("isLoggedIn") === "true");
+    // Check Supabase auth session
+    const checkSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      setIsLoggedIn(!!session);
+    };
+    
+    checkSession();
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setIsLoggedIn(!!session);
+    });
+
+    // Keep localStorage checks for doctor/admin (for now)
     setIsDoctorLoggedIn(localStorage.getItem("isDoctorLoggedIn") === "true");
     setIsAdminLoggedIn(localStorage.getItem("isAdminLoggedIn") === "true");
+
+    return () => subscription.unsubscribe();
   }, []);
 
-  const handleLogout = () => {
-    localStorage.removeItem("isLoggedIn");
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
     localStorage.removeItem("isDoctorLoggedIn");
     localStorage.removeItem("isAdminLoggedIn");
     setIsLoggedIn(false);
