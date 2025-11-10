@@ -9,6 +9,7 @@ import {
 } from "@/components/ui/select";
 import { Search } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
 // Only Karnataka → Dakshina Kannada → Puttur
@@ -29,10 +30,9 @@ const LocationSearch = () => {
   const [selectedDistrict, setSelectedDistrict] = useState("");
   const [selectedTaluk, setSelectedTaluk] = useState("");
 
-  const handleSearch = () => {
-    const isLoggedIn = localStorage.getItem("isLoggedIn") === "true";
-    
-    if (!isLoggedIn) {
+  const handleSearch = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) {
       toast({
         title: "Login Required",
         description: "Please login to search for clinics",

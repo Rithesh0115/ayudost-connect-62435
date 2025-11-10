@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { MapPin, Star, Clock, Phone, Award, Calendar } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 // Mock clinic and doctor data
 const mockClinic = {
@@ -123,10 +124,10 @@ const ClinicDetail = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
 
-  const handleBookAppointment = (doctor: any) => {
-    const isLoggedIn = localStorage.getItem("isLoggedIn") === "true";
+  const handleBookAppointment = async (doctor: any) => {
+    const { data: { session } } = await supabase.auth.getSession();
     
-    if (!isLoggedIn) {
+    if (!session) {
       toast({
         title: "Login Required",
         description: "Please login to book an appointment",

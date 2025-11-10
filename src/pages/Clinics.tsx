@@ -78,13 +78,6 @@ const Clinics = () => {
   const district = searchParams.get("district");
   const taluk = searchParams.get("taluk");
   
-  // Check if user is logged in
-  const isLoggedIn = localStorage.getItem("isLoggedIn") === "true";
-  
-  if (!isLoggedIn) {
-    navigate("/auth?mode=login");
-    return null;
-  }
   
   const mockClinics = getClinicsByLocation(taluk || "");
 
