@@ -6,6 +6,14 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import { Badge } from "@/components/ui/badge";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { Star, MapPin, Award, Calendar as CalendarIcon } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { cn } from "@/lib/utils";
@@ -20,6 +28,7 @@ const BookAppointment = () => {
   
   const [selectedDate, setSelectedDate] = useState<Date | undefined>(new Date());
   const [selectedTimeSlot, setSelectedTimeSlot] = useState<string>("");
+  const [isConfirmDialogOpen, setIsConfirmDialogOpen] = useState(false);
 
   // Get doctor data from URL params
   const doctor = {
@@ -53,7 +62,7 @@ const BookAppointment = () => {
     { day: "Sat", hours: "10:00-13:00" },
   ];
 
-  const handleBookAppointment = async () => {
+  const handleOpenConfirmDialog = () => {
     if (!selectedDate || !selectedTimeSlot) {
       toast({
         title: "Missing Information",
@@ -62,7 +71,10 @@ const BookAppointment = () => {
       });
       return;
     }
+    setIsConfirmDialogOpen(true);
+  };
 
+  const handleConfirmBooking = async () => {
     try {
       // Check if user is logged in
       const { data: { session } } = await supabase.auth.getSession();
@@ -83,16 +95,18 @@ const BookAppointment = () => {
           user_id: session.user.id,
           doctor_name: doctor.name,
           clinic_name: doctor.clinic.name,
-          date: selectedDate.toLocaleDateString('en-CA'), // YYYY-MM-DD format
+          date: selectedDate!.toLocaleDateString('en-CA'), // YYYY-MM-DD format
           time: selectedTimeSlot,
           status: 'upcoming',
         });
 
       if (error) throw error;
 
+      setIsConfirmDialogOpen(false);
+      
       toast({
         title: "Appointment Booked!",
-        description: `Your appointment with ${doctor.name} has been confirmed for ${selectedDate.toLocaleDateString()} at ${selectedTimeSlot}`,
+        description: `Your appointment with ${doctor.name} has been confirmed for ${selectedDate!.toLocaleDateString()} at ${selectedTimeSlot}`,
       });
       
       // Navigate to dashboard
@@ -243,7 +257,7 @@ const BookAppointment = () => {
                   <Button 
                     className="w-full" 
                     size="lg"
-                    onClick={handleBookAppointment}
+                    onClick={handleOpenConfirmDialog}
                     disabled={!selectedDate || !selectedTimeSlot}
                   >
                     Book Appointment
@@ -252,6 +266,55 @@ const BookAppointment = () => {
               </Card>
             </div>
           </div>
+
+          {/* Confirmation Dialog */}
+          <Dialog open={isConfirmDialogOpen} onOpenChange={setIsConfirmDialogOpen}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Confirm Appointment</DialogTitle>
+                <DialogDescription>
+                  Please review your appointment details
+                </DialogDescription>
+              </DialogHeader>
+              
+              <div className="space-y-4 py-4">
+                <div>
+                  <p className="text-sm text-muted-foreground mb-1">Doctor</p>
+                  <p className="font-semibold">{doctor.name}</p>
+                </div>
+                
+                <div>
+                  <p className="text-sm text-muted-foreground mb-1">Date</p>
+                  <p className="font-semibold">
+                    {selectedDate?.toLocaleDateString('en-US', { 
+                      year: 'numeric', 
+                      month: 'long', 
+                      day: 'numeric' 
+                    })}
+                  </p>
+                </div>
+                
+                <div>
+                  <p className="text-sm text-muted-foreground mb-1">Time</p>
+                  <p className="font-semibold">{selectedTimeSlot}</p>
+                </div>
+                
+                <div>
+                  <p className="text-sm text-muted-foreground mb-1">Consultation Fee</p>
+                  <p className="font-semibold text-primary text-lg">{doctor.consultationFee}</p>
+                </div>
+              </div>
+
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setIsConfirmDialogOpen(false)}>
+                  Cancel
+                </Button>
+                <Button onClick={handleConfirmBooking}>
+                  Confirm Booking
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </div>
       </main>
 
