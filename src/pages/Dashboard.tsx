@@ -27,6 +27,9 @@ const Dashboard = () => {
     full_name: "",
     email: "",
     phone: "",
+    address: "",
+    date_of_birth: "",
+    blood_group: "",
   });
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [medicalRecords, setMedicalRecords] = useState<any[]>([]);
@@ -75,6 +78,9 @@ const Dashboard = () => {
           full_name: profileData.full_name || "",
           email: profileData.email || "",
           phone: profileData.phone || "",
+          address: profileData.address || "",
+          date_of_birth: profileData.date_of_birth || "",
+          blood_group: profileData.blood_group || "",
         });
       }
 
@@ -186,6 +192,9 @@ const Dashboard = () => {
         .update({
           full_name: profile.full_name,
           phone: profile.phone,
+          address: profile.address,
+          date_of_birth: profile.date_of_birth,
+          blood_group: profile.blood_group,
         })
         .eq('id', user.id);
 
@@ -281,8 +290,8 @@ const Dashboard = () => {
   };
 
   const totalAppointments = upcomingAppointments?.length || 0;
-  const upcomingCount = upcomingAppointments.filter(apt => new Date(apt.date) >= new Date()).length;
-  const pastCount = upcomingAppointments.filter(apt => new Date(apt.date) < new Date()).length;
+  const upcomingCount = upcomingAppointments.filter(apt => apt.status === 'upcoming' || apt.status === 'confirmed').length;
+  const pastCount = upcomingAppointments.filter(apt => apt.status === 'completed').length;
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -377,18 +386,19 @@ const Dashboard = () => {
                     </TabsList>
 
                     <TabsContent value="upcoming" className="space-y-4 mt-4">
-                      {upcomingAppointments.filter(apt => new Date(apt.date) >= new Date()).length > 0 ? (
-                        upcomingAppointments.filter(apt => new Date(apt.date) >= new Date()).map((appointment) => (
+                      {upcomingAppointments.filter(apt => apt.status === 'upcoming' || apt.status === 'confirmed').length > 0 ? (
+                        upcomingAppointments.filter(apt => apt.status === 'upcoming' || apt.status === 'confirmed').map((appointment) => (
                           <div key={appointment.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 border border-border rounded-lg">
                             <div className="space-y-1 mb-4 sm:mb-0">
                               <h3 className="font-semibold">{appointment.doctor_name}</h3>
                               <p className="text-sm text-muted-foreground">{appointment.clinic_name}</p>
                               <div className="flex items-center gap-2 mt-2">
-                                <Badge variant="secondary">{appointment.status}</Badge>
+                                <Badge variant="outline">In-Person</Badge>
+                                <Badge variant="secondary">Confirmed</Badge>
                               </div>
                             </div>
                             <div className="text-left sm:text-right space-y-2">
-                              <p className="font-medium">{appointment.date}</p>
+                              <p className="font-medium">{new Date(appointment.date).toLocaleDateString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit' })}</p>
                               <p className="text-sm text-muted-foreground">{appointment.time}</p>
                               <div className="flex gap-2 mt-2">
                                 <Button variant="outline" size="sm" onClick={() => handleReschedule(appointment.id)}>Reschedule</Button>
@@ -403,8 +413,8 @@ const Dashboard = () => {
                     </TabsContent>
 
                     <TabsContent value="past" className="space-y-4 mt-4">
-                      {upcomingAppointments.filter(apt => new Date(apt.date) < new Date()).length > 0 ? (
-                        upcomingAppointments.filter(apt => new Date(apt.date) < new Date()).map((appointment) => (
+                      {upcomingAppointments.filter(apt => apt.status === 'completed').length > 0 ? (
+                        upcomingAppointments.filter(apt => apt.status === 'completed').map((appointment) => (
                           <div key={appointment.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 border border-border rounded-lg opacity-75">
                             <div className="space-y-1 mb-4 sm:mb-0">
                               <h3 className="font-semibold">{appointment.doctor_name}</h3>
@@ -414,7 +424,7 @@ const Dashboard = () => {
                               </div>
                             </div>
                             <div className="text-left sm:text-right space-y-2">
-                              <p className="font-medium">{appointment.date}</p>
+                              <p className="font-medium">{new Date(appointment.date).toLocaleDateString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit' })}</p>
                               <p className="text-sm text-muted-foreground">{appointment.time}</p>
                             </div>
                           </div>
@@ -441,16 +451,20 @@ const Dashboard = () => {
                     </Button>
                   </div>
                 </CardHeader>
-                <CardContent className="space-y-4">
+                 <CardContent className="space-y-4">
                   {medicalRecords.length > 0 ? (
                     medicalRecords.map((record) => (
                       <div key={record.id} className="p-4 border border-border rounded-lg space-y-2">
                         <div className="flex items-start justify-between">
-                          <div>
+                          <div className="flex-1">
                             <h3 className="font-semibold">{record.title}</h3>
                             <p className="text-sm text-muted-foreground">{record.date}</p>
                           </div>
-                          <Badge variant="secondary">{record.type}</Badge>
+                          <div className="flex items-center gap-2">
+                            <Badge variant="secondary">{record.type}</Badge>
+                            <Button variant="outline" size="sm">View</Button>
+                            <Button variant="outline" size="sm">Edit</Button>
+                          </div>
                         </div>
                         {record.notes && (
                           <p className="text-sm text-muted-foreground">{record.notes}</p>
@@ -482,13 +496,17 @@ const Dashboard = () => {
                     prescriptions.map((prescription) => (
                       <div key={prescription.id} className="p-4 border border-border rounded-lg space-y-3">
                         <div className="flex items-start justify-between">
-                          <div>
+                          <div className="flex-1">
                             <h3 className="font-semibold text-lg">{prescription.medication}</h3>
                             {prescription.doctor && (
                               <p className="text-sm text-muted-foreground">Prescribed by {prescription.doctor}</p>
                             )}
                           </div>
-                          <Badge variant="default">Active</Badge>
+                          <div className="flex items-center gap-2">
+                            <Badge variant="default">Active</Badge>
+                            <Button variant="outline" size="sm">View</Button>
+                            <Button variant="outline" size="sm">Edit</Button>
+                          </div>
                         </div>
                         <div className="grid grid-cols-2 gap-2 text-sm">
                           <div>
@@ -564,6 +582,38 @@ const Dashboard = () => {
                         onChange={(e) => handleProfileChange("phone", e.target.value)}
                         disabled={!isEditingProfile}
                       />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="address">Address</Label>
+                      <Input
+                        id="address"
+                        value={profile.address}
+                        onChange={(e) => handleProfileChange("address", e.target.value)}
+                        disabled={!isEditingProfile}
+                        placeholder="123 Main Street, Puttur"
+                      />
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="dob">Date of Birth</Label>
+                        <Input
+                          id="dob"
+                          type="date"
+                          value={profile.date_of_birth}
+                          onChange={(e) => handleProfileChange("date_of_birth", e.target.value)}
+                          disabled={!isEditingProfile}
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor="bloodGroup">Blood Group</Label>
+                        <Input
+                          id="bloodGroup"
+                          value={profile.blood_group}
+                          onChange={(e) => handleProfileChange("blood_group", e.target.value)}
+                          disabled={!isEditingProfile}
+                          placeholder="O+"
+                        />
+                      </div>
                     </div>
                   </div>
                 </CardContent>

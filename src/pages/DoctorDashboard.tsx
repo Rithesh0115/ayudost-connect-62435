@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Calendar, Users, FileText, TrendingUp, Clock, Phone, Mail, MapPin, Activity, BarChart3 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 const DoctorDashboard = () => {
   const navigate = useNavigate();
@@ -377,14 +378,37 @@ const DoctorDashboard = () => {
           )}
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowConsultationDialog(false)}>Cancel</Button>
-            <Button onClick={() => {
+            <Button onClick={async () => {
+              // Mark consultation as completed in database
+              if (selectedAppointment?.id) {
+                try {
+                  const { error } = await supabase
+                    .from('appointments')
+                    .update({ status: 'completed' })
+                    .eq('id', selectedAppointment.id);
+
+                  if (error) throw error;
+
+                  toast({
+                    title: "Consultation Completed",
+                    description: `Consultation with ${selectedAppointment?.patient} has been marked as completed`,
+                  });
+                } catch (error: any) {
+                  toast({
+                    title: "Error",
+                    description: error.message || "Failed to update appointment status",
+                    variant: "destructive",
+                  });
+                }
+              } else {
+                toast({
+                  title: "Consultation Started",
+                  description: `Now consulting with ${selectedAppointment?.patient}`,
+                });
+              }
               setShowConsultationDialog(false);
-              toast({
-                title: "Consultation Started",
-                description: `Now consulting with ${selectedAppointment?.patient}`,
-              });
             }}>
-              Begin Consultation
+              Complete Consultation
             </Button>
           </DialogFooter>
         </DialogContent>

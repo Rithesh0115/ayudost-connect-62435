@@ -91,7 +91,10 @@ export type Database = {
       }
       profiles: {
         Row: {
+          address: string | null
+          blood_group: string | null
           created_at: string | null
+          date_of_birth: string | null
           email: string | null
           full_name: string | null
           id: string
@@ -99,7 +102,10 @@ export type Database = {
           updated_at: string | null
         }
         Insert: {
+          address?: string | null
+          blood_group?: string | null
           created_at?: string | null
+          date_of_birth?: string | null
           email?: string | null
           full_name?: string | null
           id: string
@@ -107,7 +113,10 @@ export type Database = {
           updated_at?: string | null
         }
         Update: {
+          address?: string | null
+          blood_group?: string | null
           created_at?: string | null
+          date_of_birth?: string | null
           email?: string | null
           full_name?: string | null
           id?: string
