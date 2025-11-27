@@ -12,10 +12,12 @@ import { Label } from "@/components/ui/label";
 import { Calendar, FileText, User, Bell, Heart, Users } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { useUserRole } from "@/hooks/useUserRole";
 
 const Dashboard = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { role, loading: roleLoading } = useUserRole();
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [upcomingAppointments, setUpcomingAppointments] = useState<any[]>([]);
@@ -58,6 +60,17 @@ const Dashboard = () => {
 
     return () => subscription.unsubscribe();
   }, [navigate]);
+
+  // Redirect if user doesn't have 'user' role
+  useEffect(() => {
+    if (!roleLoading && role && role !== "user") {
+      if (role === "doctor") {
+        navigate("/doctor-dashboard");
+      } else if (role === "admin") {
+        navigate("/admin-dashboard");
+      }
+    }
+  }, [role, roleLoading, navigate]);
 
   const checkUser = async () => {
     const { data: { session } } = await supabase.auth.getSession();

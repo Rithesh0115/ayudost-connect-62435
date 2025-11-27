@@ -9,6 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Stethoscope } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 const DoctorAuth = () => {
   const navigate = useNavigate();
@@ -20,27 +21,50 @@ const DoctorAuth = () => {
     setIsLoading(true);
     
     const formData = new FormData(e.target as HTMLFormElement);
-    const name = formData.get("name") as string;
+    const email = formData.get("email") as string;
     const password = formData.get("password") as string;
 
-    if (name && password) {
-      setTimeout(() => {
-        localStorage.setItem("isDoctorLoggedIn", "true");
-        localStorage.setItem("doctorName", name);
-        setIsLoading(false);
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) throw error;
+
+      if (data.user) {
+        // Check if user has doctor role
+        const { data: roleData, error: roleError } = await supabase
+          .from("user_roles")
+          .select("role")
+          .eq("user_id", data.user.id)
+          .single();
+
+        if (roleError || roleData?.role !== "doctor") {
+          await supabase.auth.signOut();
+          toast({
+            title: "Access Denied",
+            description: "You don't have doctor privileges",
+            variant: "destructive",
+          });
+          setIsLoading(false);
+          return;
+        }
+
         toast({
           title: "Login Successful",
           description: "Welcome back, Doctor!",
         });
         navigate("/doctor-dashboard");
-      }, 1000);
-    } else {
-      setIsLoading(false);
+      }
+    } catch (error: any) {
       toast({
         title: "Login Failed",
-        description: "Please enter valid credentials",
+        description: error.message || "Invalid credentials",
         variant: "destructive",
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -49,27 +73,53 @@ const DoctorAuth = () => {
     setIsLoading(true);
     
     const formData = new FormData(e.target as HTMLFormElement);
-    const name = formData.get("name") as string;
+    const email = formData.get("email") as string;
     const password = formData.get("password") as string;
+    const fullName = formData.get("fullName") as string;
 
-    if (name && password) {
-      setTimeout(() => {
-        localStorage.setItem("isDoctorLoggedIn", "true");
-        localStorage.setItem("doctorName", name);
-        setIsLoading(false);
+    try {
+      const redirectUrl = `${window.location.origin}/`;
+      
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: redirectUrl,
+          data: {
+            full_name: fullName,
+          }
+        }
+      });
+
+      if (error) throw error;
+
+      if (data.user) {
+        // Assign doctor role (admin will need to verify)
+        const { error: roleError } = await supabase
+          .from("user_roles")
+          .insert({
+            user_id: data.user.id,
+            role: "doctor",
+          });
+
+        if (roleError) {
+          console.error("Error assigning doctor role:", roleError);
+        }
+
         toast({
           title: "Account Created",
-          description: "Welcome to AyuDost!",
+          description: "Your doctor account has been created. Please wait for admin verification.",
         });
         navigate("/doctor-dashboard");
-      }, 1000);
-    } else {
-      setIsLoading(false);
+      }
+    } catch (error: any) {
       toast({
         title: "Signup Failed",
-        description: "Please fill all required fields",
+        description: error.message || "Could not create account",
         variant: "destructive",
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -100,12 +150,12 @@ const DoctorAuth = () => {
               <TabsContent value="login">
                 <form onSubmit={handleLogin} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="login-name">Name</Label>
+                    <Label htmlFor="login-email">Email</Label>
                     <Input
-                      id="login-name"
-                      name="name"
-                      type="text"
-                      placeholder="Enter your name"
+                      id="login-email"
+                      name="email"
+                      type="email"
+                      placeholder="doctor@example.com"
                       required
                     />
                   </div>
@@ -128,12 +178,22 @@ const DoctorAuth = () => {
               <TabsContent value="signup">
                 <form onSubmit={handleSignup} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="signup-name">Name</Label>
+                    <Label htmlFor="signup-name">Full Name</Label>
                     <Input
                       id="signup-name"
-                      name="name"
+                      name="fullName"
                       type="text"
-                      placeholder="Enter your full name"
+                      placeholder="Dr. John Doe"
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="signup-email">Email</Label>
+                    <Input
+                      id="signup-email"
+                      name="email"
+                      type="email"
+                      placeholder="doctor@example.com"
                       required
                     />
                   </div>
@@ -145,6 +205,7 @@ const DoctorAuth = () => {
                       type="password"
                       placeholder="Create a password"
                       required
+                      minLength={6}
                     />
                   </div>
                   <Button type="submit" className="w-full" disabled={isLoading}>
