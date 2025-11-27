@@ -22,6 +22,11 @@ const DoctorDashboard = () => {
   const [showEditScheduleDialog, setShowEditScheduleDialog] = useState(false);
   const [showEditPatientDialog, setShowEditPatientDialog] = useState(false);
   const [editPatientData, setEditPatientData] = useState<any>(null);
+  const [showSlotDialog, setShowSlotDialog] = useState(false);
+  const [slotEditMode, setSlotEditMode] = useState<'add' | 'edit'>('add');
+  const [selectedDay, setSelectedDay] = useState<string>('');
+  const [selectedSlotIndex, setSelectedSlotIndex] = useState<number | null>(null);
+  const [slotData, setSlotData] = useState({ time: '', status: 'Available' });
 
   useEffect(() => {
     // Check if doctor is logged in
@@ -43,14 +48,14 @@ const DoctorDashboard = () => {
     { id: 4, name: "Sneha Gupta", age: 31, gender: "Female", lastVisit: "2024-01-18", phone: "+91 98765 43213", condition: "Migraine" },
   ]);
 
-  const weeklySchedule = [
+  const [weeklySchedule, setWeeklySchedule] = useState([
     { day: "Monday", slots: [{ time: "9:00 AM - 12:00 PM", status: "Available" }, { time: "2:00 PM - 6:00 PM", status: "Available" }] },
     { day: "Tuesday", slots: [{ time: "9:00 AM - 12:00 PM", status: "Available" }, { time: "2:00 PM - 6:00 PM", status: "Booked" }] },
     { day: "Wednesday", slots: [{ time: "9:00 AM - 12:00 PM", status: "Available" }, { time: "2:00 PM - 6:00 PM", status: "Available" }] },
     { day: "Thursday", slots: [{ time: "9:00 AM - 12:00 PM", status: "Booked" }, { time: "2:00 PM - 6:00 PM", status: "Available" }] },
     { day: "Friday", slots: [{ time: "9:00 AM - 12:00 PM", status: "Available" }, { time: "2:00 PM - 6:00 PM", status: "Available" }] },
     { day: "Saturday", slots: [{ time: "9:00 AM - 1:00 PM", status: "Available" }] },
-  ];
+  ]);
 
   const analyticsData = [
     { metric: "Total Consultations", value: "234", change: "+12%", icon: Users },
@@ -507,7 +512,18 @@ const DoctorDashboard = () => {
               <div key={day.day} className="border border-border rounded-lg p-4">
                 <div className="flex items-center justify-between mb-3">
                   <h3 className="font-semibold">{day.day}</h3>
-                  <Button variant="outline" size="sm">Add Slot</Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm"
+                    onClick={() => {
+                      setSelectedDay(day.day);
+                      setSlotEditMode('add');
+                      setSlotData({ time: '', status: 'Available' });
+                      setShowSlotDialog(true);
+                    }}
+                  >
+                    Add Slot
+                  </Button>
                 </div>
                 <div className="space-y-2">
                   {day.slots.map((slot, idx) => (
@@ -520,7 +536,19 @@ const DoctorDashboard = () => {
                         <Badge variant={slot.status === "Available" ? "default" : "secondary"} className="text-xs">
                           {slot.status}
                         </Badge>
-                        <Button variant="ghost" size="sm">Edit</Button>
+                        <Button 
+                          variant="ghost" 
+                          size="sm"
+                          onClick={() => {
+                            setSelectedDay(day.day);
+                            setSelectedSlotIndex(idx);
+                            setSlotEditMode('edit');
+                            setSlotData({ time: slot.time, status: slot.status });
+                            setShowSlotDialog(true);
+                          }}
+                        >
+                          Edit
+                        </Button>
                       </div>
                     </div>
                   ))}
@@ -626,6 +654,106 @@ const DoctorDashboard = () => {
               });
             }}>
               Save Changes
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Add/Edit Slot Dialog */}
+      <Dialog open={showSlotDialog} onOpenChange={setShowSlotDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{slotEditMode === 'add' ? 'Add New' : 'Edit'} Time Slot</DialogTitle>
+            <DialogDescription>
+              {slotEditMode === 'add' ? 'Add a new time slot for' : 'Update time slot for'} {selectedDay}
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <label className="text-sm font-medium text-muted-foreground">Time Slot</label>
+              <input
+                type="text"
+                placeholder="e.g., 9:00 AM - 12:00 PM"
+                value={slotData.time}
+                onChange={(e) => setSlotData({ ...slotData, time: e.target.value })}
+                className="w-full mt-1 px-3 py-2 border border-border rounded-md bg-background"
+              />
+            </div>
+            <div>
+              <label className="text-sm font-medium text-muted-foreground">Status</label>
+              <select
+                value={slotData.status}
+                onChange={(e) => setSlotData({ ...slotData, status: e.target.value })}
+                className="w-full mt-1 px-3 py-2 border border-border rounded-md bg-background"
+              >
+                <option value="Available">Available</option>
+                <option value="Booked">Booked</option>
+              </select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowSlotDialog(false)}>Cancel</Button>
+            {slotEditMode === 'edit' && (
+              <Button 
+                variant="destructive"
+                onClick={() => {
+                  const updatedSchedule = weeklySchedule.map(day => {
+                    if (day.day === selectedDay) {
+                      return {
+                        ...day,
+                        slots: day.slots.filter((_, idx) => idx !== selectedSlotIndex)
+                      };
+                    }
+                    return day;
+                  });
+                  setWeeklySchedule(updatedSchedule);
+                  setShowSlotDialog(false);
+                  toast({
+                    title: "Slot Deleted",
+                    description: "Time slot has been removed from your schedule",
+                  });
+                }}
+              >
+                Delete Slot
+              </Button>
+            )}
+            <Button onClick={() => {
+              if (!slotData.time.trim()) {
+                toast({
+                  title: "Error",
+                  description: "Please enter a time slot",
+                  variant: "destructive",
+                });
+                return;
+              }
+
+              const updatedSchedule = weeklySchedule.map(day => {
+                if (day.day === selectedDay) {
+                  if (slotEditMode === 'add') {
+                    return {
+                      ...day,
+                      slots: [...day.slots, slotData]
+                    };
+                  } else {
+                    return {
+                      ...day,
+                      slots: day.slots.map((slot, idx) => 
+                        idx === selectedSlotIndex ? slotData : slot
+                      )
+                    };
+                  }
+                }
+                return day;
+              });
+
+              setWeeklySchedule(updatedSchedule);
+              setShowSlotDialog(false);
+              toast({
+                title: slotEditMode === 'add' ? "Slot Added" : "Slot Updated",
+                description: `Time slot has been ${slotEditMode === 'add' ? 'added to' : 'updated in'} your schedule`,
+              });
+            }}>
+              {slotEditMode === 'add' ? 'Add Slot' : 'Save Changes'}
             </Button>
           </DialogFooter>
         </DialogContent>
