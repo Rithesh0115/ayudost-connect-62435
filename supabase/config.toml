@@ -1,1 +1,7 @@
 project_id = "fqeoxxaysrnrbxchhcah"
+
+[functions.send-appointment-reminder]
+verify_jwt = false
+
+[functions.send-medication-reminder]
+verify_jwt = false

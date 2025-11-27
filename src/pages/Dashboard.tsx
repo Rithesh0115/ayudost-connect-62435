@@ -9,9 +9,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Calendar, FileText, User, Bell, Heart, Users } from "lucide-react";
+import { Calendar, FileText, User, Bell, Heart, Users, Upload, Download } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { AppointmentCalendar } from "@/components/AppointmentCalendar";
+import { NotificationBell } from "@/components/NotificationBell";
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -42,8 +44,10 @@ const Dashboard = () => {
   const [editPrescriptionDialog, setEditPrescriptionDialog] = useState(false);
   const [selectedRecord, setSelectedRecord] = useState<any>(null);
   const [selectedPrescription, setSelectedPrescription] = useState<any>(null);
-  const [newRecord, setNewRecord] = useState({ title: "", date: "", type: "", notes: "" });
+  const [newRecord, setNewRecord] = useState({ title: "", date: "", type: "", notes: "", document: null as File | null });
   const [newPrescription, setNewPrescription] = useState({ medicine: "", dosage: "", frequency: "", duration: "", prescribedBy: "", date: "" });
+  const [uploadingFile, setUploadingFile] = useState(false);
+  const [showCalendar, setShowCalendar] = useState(false);
 
   useEffect(() => {
     checkUser();
@@ -110,6 +114,17 @@ const Dashboard = () => {
       
       if (prescriptionsData) {
         setPrescriptions(prescriptionsData);
+      }
+
+      // Load medical records from database
+      const { data: recordsData } = await supabase
+        .from('medical_records')
+        .select('*')
+        .eq('user_id', userId)
+        .order('date', { ascending: false });
+      
+      if (recordsData) {
+        setMedicalRecords(recordsData);
       }
     } catch (error) {
       console.error('Error loading user data:', error);
@@ -224,7 +239,7 @@ const Dashboard = () => {
     setProfile(prev => ({ ...prev, [field]: value }));
   };
 
-  const handleAddRecord = () => {
+  const handleAddRecord = async () => {
     if (!newRecord.title || !newRecord.date || !newRecord.type) {
       toast({
         title: "Error",
@@ -234,22 +249,60 @@ const Dashboard = () => {
       return;
     }
 
-    const record = {
-      id: Date.now(),
-      ...newRecord,
-    };
+    try {
+      setUploadingFile(true);
+      let documentUrl = null;
 
-    const updatedRecords = [...medicalRecords, record];
-    setMedicalRecords(updatedRecords);
-    localStorage.setItem("medicalRecords", JSON.stringify(updatedRecords));
+      // Upload document if provided
+      if (newRecord.document) {
+        const fileExt = newRecord.document.name.split('.').pop();
+        const fileName = `${user.id}/${Date.now()}.${fileExt}`;
+        
+        const { error: uploadError } = await supabase.storage
+          .from('medical-documents')
+          .upload(fileName, newRecord.document);
 
-    toast({
-      title: "Record Added",
-      description: "Medical record has been added successfully",
-    });
+        if (uploadError) throw uploadError;
 
-    setNewRecord({ title: "", date: "", type: "", notes: "" });
-    setAddRecordDialog(false);
+        const { data: { publicUrl } } = supabase.storage
+          .from('medical-documents')
+          .getPublicUrl(fileName);
+        
+        documentUrl = publicUrl;
+      }
+
+      // Insert record into database
+      const { error } = await supabase
+        .from('medical_records')
+        .insert({
+          user_id: user.id,
+          title: newRecord.title,
+          type: newRecord.type,
+          date: newRecord.date,
+          notes: newRecord.notes || null,
+          document_url: documentUrl,
+        });
+
+      if (error) throw error;
+
+      await loadUserData(user.id);
+
+      toast({
+        title: "Record Added",
+        description: "Medical record has been added successfully",
+      });
+
+      setNewRecord({ title: "", date: "", type: "", notes: "", document: null });
+      setAddRecordDialog(false);
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to add medical record",
+        variant: "destructive",
+      });
+    } finally {
+      setUploadingFile(false);
+    }
   };
 
   const handleAddPrescription = async () => {
@@ -307,11 +360,24 @@ const Dashboard = () => {
       date: record.date,
       type: record.type,
       notes: record.notes || "",
+      document: null,
     });
     setEditRecordDialog(true);
   };
 
-  const handleUpdateRecord = () => {
+  const handleDownloadDocument = async (documentUrl: string) => {
+    try {
+      window.open(documentUrl, '_blank');
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to download document",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleUpdateRecord = async () => {
     if (!newRecord.title || !newRecord.date || !newRecord.type) {
       toast({
         title: "Error",
@@ -321,19 +387,59 @@ const Dashboard = () => {
       return;
     }
 
-    const updatedRecords = medicalRecords.map(record =>
-      record.id === selectedRecord.id ? { ...record, ...newRecord } : record
-    );
-    setMedicalRecords(updatedRecords);
-    localStorage.setItem("medicalRecords", JSON.stringify(updatedRecords));
+    try {
+      setUploadingFile(true);
+      let documentUrl = selectedRecord.document_url;
 
-    toast({
-      title: "Record Updated",
-      description: "Medical record has been updated successfully",
-    });
+      // Upload new document if provided
+      if (newRecord.document) {
+        const fileExt = newRecord.document.name.split('.').pop();
+        const fileName = `${user.id}/${Date.now()}.${fileExt}`;
+        
+        const { error: uploadError } = await supabase.storage
+          .from('medical-documents')
+          .upload(fileName, newRecord.document);
 
-    setNewRecord({ title: "", date: "", type: "", notes: "" });
-    setEditRecordDialog(false);
+        if (uploadError) throw uploadError;
+
+        const { data: { publicUrl } } = supabase.storage
+          .from('medical-documents')
+          .getPublicUrl(fileName);
+        
+        documentUrl = publicUrl;
+      }
+
+      const { error } = await supabase
+        .from('medical_records')
+        .update({
+          title: newRecord.title,
+          type: newRecord.type,
+          date: newRecord.date,
+          notes: newRecord.notes || null,
+          document_url: documentUrl,
+        })
+        .eq('id', selectedRecord.id);
+
+      if (error) throw error;
+
+      await loadUserData(user.id);
+
+      toast({
+        title: "Record Updated",
+        description: "Medical record has been updated successfully",
+      });
+
+      setNewRecord({ title: "", date: "", type: "", notes: "", document: null });
+      setEditRecordDialog(false);
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update medical record",
+        variant: "destructive",
+      });
+    } finally {
+      setUploadingFile(false);
+    }
   };
 
   const handleViewPrescription = (prescription: any) => {
@@ -406,13 +512,16 @@ const Dashboard = () => {
       
       <main className="flex-1 py-12 px-4 bg-muted/30">
         <div className="container mx-auto max-w-7xl">
-          <div className="mb-8">
-            <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-2">
-              Welcome back, {profile.full_name?.split(' ')[0] || 'User'}!
-            </h1>
-            <p className="text-muted-foreground">
-              Manage your appointments and health records
-            </p>
+          <div className="mb-8 flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-2">
+                Welcome back, {profile.full_name?.split(' ')[0] || 'User'}!
+              </h1>
+              <p className="text-muted-foreground">
+                Manage your appointments and health records
+              </p>
+            </div>
+            <NotificationBell />
           </div>
 
           {/* Quick Stats */}
@@ -480,17 +589,32 @@ const Dashboard = () => {
             </TabsList>
 
             <TabsContent value="appointments" className="space-y-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle>My Appointments</CardTitle>
-                  <CardDescription>Your scheduled consultations</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <Tabs defaultValue="upcoming">
-                    <TabsList className="w-full">
-                      <TabsTrigger value="upcoming" className="flex-1">Upcoming ({upcomingCount})</TabsTrigger>
-                      <TabsTrigger value="past" className="flex-1">Past ({pastCount})</TabsTrigger>
-                    </TabsList>
+              <div className="flex justify-end mb-4">
+                <Button
+                  variant={showCalendar ? "default" : "outline"}
+                  onClick={() => setShowCalendar(!showCalendar)}
+                >
+                  {showCalendar ? "Show List View" : "Show Calendar View"}
+                </Button>
+              </div>
+
+              {showCalendar ? (
+                <AppointmentCalendar 
+                  appointments={upcomingAppointments}
+                  onAppointmentClick={(apt) => handleReschedule(apt.id)}
+                />
+              ) : (
+                <Card>
+                  <CardHeader>
+                    <CardTitle>My Appointments</CardTitle>
+                    <CardDescription>Your scheduled consultations</CardDescription>
+                  </CardHeader>
+                  <CardContent>
+                    <Tabs defaultValue="upcoming">
+                      <TabsList className="w-full">
+                        <TabsTrigger value="upcoming" className="flex-1">Upcoming ({upcomingCount})</TabsTrigger>
+                        <TabsTrigger value="past" className="flex-1">Past ({pastCount})</TabsTrigger>
+                      </TabsList>
 
                     <TabsContent value="upcoming" className="space-y-4 mt-4">
                       {upcomingAppointments.filter(apt => apt.status === 'upcoming' || apt.status === 'confirmed').length > 0 ? (
@@ -543,6 +667,7 @@ const Dashboard = () => {
                   </Tabs>
                 </CardContent>
               </Card>
+              )}
             </TabsContent>
 
             <TabsContent value="records">
@@ -560,24 +685,35 @@ const Dashboard = () => {
                 </CardHeader>
                  <CardContent className="space-y-4">
                   {medicalRecords.length > 0 ? (
-                    medicalRecords.map((record) => (
-                      <div key={record.id} className="p-4 border border-border rounded-lg space-y-2">
-                        <div className="flex items-start justify-between">
-                          <div className="flex-1">
-                            <h3 className="font-semibold">{record.title}</h3>
-                            <p className="text-sm text-muted-foreground">{record.date}</p>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Badge variant="secondary">{record.type}</Badge>
-                            <Button variant="outline" size="sm" onClick={() => handleViewRecord(record)}>View</Button>
-                            <Button variant="outline" size="sm" onClick={() => handleEditRecord(record)}>Edit</Button>
-                          </div>
-                        </div>
-                        {record.notes && (
-                          <p className="text-sm text-muted-foreground">{record.notes}</p>
-                        )}
-                      </div>
-                    ))
+                     medicalRecords.map((record) => (
+                       <div key={record.id} className="p-4 border border-border rounded-lg space-y-2">
+                         <div className="flex items-start justify-between">
+                           <div className="flex-1">
+                             <h3 className="font-semibold">{record.title}</h3>
+                             <p className="text-sm text-muted-foreground">{new Date(record.date).toLocaleDateString()}</p>
+                             {record.document_url && (
+                               <Button 
+                                 variant="link" 
+                                 size="sm" 
+                                 className="p-0 h-auto mt-1" 
+                                 onClick={() => handleDownloadDocument(record.document_url)}
+                               >
+                                 <Download className="h-4 w-4 mr-1" />
+                                 Download Document
+                               </Button>
+                             )}
+                           </div>
+                           <div className="flex items-center gap-2">
+                             <Badge variant="secondary">{record.type}</Badge>
+                             <Button variant="outline" size="sm" onClick={() => handleViewRecord(record)}>View</Button>
+                             <Button variant="outline" size="sm" onClick={() => handleEditRecord(record)}>Edit</Button>
+                           </div>
+                         </div>
+                         {record.notes && (
+                           <p className="text-sm text-muted-foreground">{record.notes}</p>
+                         )}
+                       </div>
+                     ))
                   ) : (
                     <p className="text-muted-foreground text-center py-8">No medical records yet. Add your first record to get started!</p>
                   )}
@@ -817,13 +953,23 @@ const Dashboard = () => {
                 onChange={(e) => setNewRecord({ ...newRecord, notes: e.target.value })}
               />
             </div>
+            <div className="space-y-2">
+              <Label htmlFor="recordDocument">Upload Document (Optional)</Label>
+              <Input
+                id="recordDocument"
+                type="file"
+                accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                onChange={(e) => setNewRecord({ ...newRecord, document: e.target.files?.[0] || null })}
+              />
+              <p className="text-xs text-muted-foreground">Supported formats: PDF, JPG, PNG, DOC, DOCX</p>
+            </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setAddRecordDialog(false)}>
               Cancel
             </Button>
-            <Button onClick={handleAddRecord}>
-              Add Record
+            <Button onClick={handleAddRecord} disabled={uploadingFile}>
+              {uploadingFile ? "Uploading..." : "Add Record"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -929,6 +1075,19 @@ const Dashboard = () => {
                   <p className="text-sm text-muted-foreground">{selectedRecord.notes}</p>
                 </div>
               )}
+              {selectedRecord.document_url && (
+                <div className="space-y-2">
+                  <Label className="font-semibold">Document</Label>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => handleDownloadDocument(selectedRecord.document_url)}
+                  >
+                    <Download className="h-4 w-4 mr-2" />
+                    Download Document
+                  </Button>
+                </div>
+              )}
             </div>
           )}
           <DialogFooter>
@@ -979,13 +1138,23 @@ const Dashboard = () => {
                 onChange={(e) => setNewRecord({ ...newRecord, notes: e.target.value })}
               />
             </div>
+            <div className="space-y-2">
+              <Label htmlFor="editRecordDocument">Upload New Document (Optional)</Label>
+              <Input
+                id="editRecordDocument"
+                type="file"
+                accept=".pdf,.jpg,.jpeg,.png,.doc,.docx"
+                onChange={(e) => setNewRecord({ ...newRecord, document: e.target.files?.[0] || null })}
+              />
+              <p className="text-xs text-muted-foreground">Leave empty to keep existing document</p>
+            </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setEditRecordDialog(false)}>
               Cancel
             </Button>
-            <Button onClick={handleUpdateRecord}>
-              Save Changes
+            <Button onClick={handleUpdateRecord} disabled={uploadingFile}>
+              {uploadingFile ? "Uploading..." : "Save Changes"}
             </Button>
           </DialogFooter>
         </DialogContent>
