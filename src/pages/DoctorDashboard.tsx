@@ -36,12 +36,12 @@ const DoctorDashboard = () => {
     { id: 3, patient: "Amit Patel", time: "2:00 PM", type: "In-Person", status: "Pending" },
   ];
 
-  const patients = [
+  const [patients, setPatients] = useState([
     { id: 1, name: "Rahul Mehta", age: 35, gender: "Male", lastVisit: "2024-01-15", phone: "+91 98765 43210", condition: "Diabetes" },
     { id: 2, name: "Priya Singh", age: 28, gender: "Female", lastVisit: "2024-01-20", phone: "+91 98765 43211", condition: "Hypertension" },
     { id: 3, name: "Amit Patel", age: 42, gender: "Male", lastVisit: "2024-01-10", phone: "+91 98765 43212", condition: "Asthma" },
     { id: 4, name: "Sneha Gupta", age: 31, gender: "Female", lastVisit: "2024-01-18", phone: "+91 98765 43213", condition: "Migraine" },
-  ];
+  ]);
 
   const weeklySchedule = [
     { day: "Monday", slots: [{ time: "9:00 AM - 12:00 PM", status: "Available" }, { time: "2:00 PM - 6:00 PM", status: "Available" }] },
@@ -608,6 +608,17 @@ const DoctorDashboard = () => {
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowEditPatientDialog(false)}>Cancel</Button>
             <Button onClick={() => {
+              // Update the patient in the patients array
+              const updatedPatients = patients.map(p => 
+                p.id === editPatientData.id ? editPatientData : p
+              );
+              setPatients(updatedPatients);
+              
+              // Update selected patient if it's the same one
+              if (selectedPatient?.id === editPatientData.id) {
+                setSelectedPatient(editPatientData);
+              }
+              
               setShowEditPatientDialog(false);
               toast({
                 title: "Patient Record Updated",
