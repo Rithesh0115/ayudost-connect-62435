@@ -20,6 +20,8 @@ const DoctorDashboard = () => {
   const [selectedPatient, setSelectedPatient] = useState<any>(null);
   const [showPatientProfileDialog, setShowPatientProfileDialog] = useState(false);
   const [showEditScheduleDialog, setShowEditScheduleDialog] = useState(false);
+  const [showEditPatientDialog, setShowEditPatientDialog] = useState(false);
+  const [editPatientData, setEditPatientData] = useState<any>(null);
 
   useEffect(() => {
     // Check if doctor is logged in
@@ -483,10 +485,9 @@ const DoctorDashboard = () => {
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowPatientProfileDialog(false)}>Close</Button>
             <Button onClick={() => {
-              toast({
-                title: "Medical Records Updated",
-                description: `${selectedPatient?.name}'s profile accessed`,
-              });
+              setEditPatientData({ ...selectedPatient });
+              setShowEditPatientDialog(true);
+              setShowPatientProfileDialog(false);
             }}>
               Edit Record
             </Button>
@@ -534,6 +535,83 @@ const DoctorDashboard = () => {
               toast({
                 title: "Schedule Updated",
                 description: "Your availability has been saved successfully",
+              });
+            }}>
+              Save Changes
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Patient Record Dialog */}
+      <Dialog open={showEditPatientDialog} onOpenChange={setShowEditPatientDialog}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Edit Patient Record</DialogTitle>
+            <DialogDescription>Update patient information and medical history</DialogDescription>
+          </DialogHeader>
+          {editPatientData && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">Full Name</label>
+                  <input
+                    type="text"
+                    value={editPatientData.name}
+                    onChange={(e) => setEditPatientData({ ...editPatientData, name: e.target.value })}
+                    className="w-full mt-1 px-3 py-2 border border-border rounded-md bg-background"
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">Age</label>
+                  <input
+                    type="number"
+                    value={editPatientData.age}
+                    onChange={(e) => setEditPatientData({ ...editPatientData, age: parseInt(e.target.value) })}
+                    className="w-full mt-1 px-3 py-2 border border-border rounded-md bg-background"
+                  />
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">Gender</label>
+                  <select
+                    value={editPatientData.gender}
+                    onChange={(e) => setEditPatientData({ ...editPatientData, gender: e.target.value })}
+                    className="w-full mt-1 px-3 py-2 border border-border rounded-md bg-background"
+                  >
+                    <option value="Male">Male</option>
+                    <option value="Female">Female</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-muted-foreground">Contact</label>
+                  <input
+                    type="tel"
+                    value={editPatientData.phone}
+                    onChange={(e) => setEditPatientData({ ...editPatientData, phone: e.target.value })}
+                    className="w-full mt-1 px-3 py-2 border border-border rounded-md bg-background"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="text-sm font-medium text-muted-foreground">Primary Condition</label>
+                <input
+                  type="text"
+                  value={editPatientData.condition}
+                  onChange={(e) => setEditPatientData({ ...editPatientData, condition: e.target.value })}
+                  className="w-full mt-1 px-3 py-2 border border-border rounded-md bg-background"
+                />
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowEditPatientDialog(false)}>Cancel</Button>
+            <Button onClick={() => {
+              setShowEditPatientDialog(false);
+              toast({
+                title: "Patient Record Updated",
+                description: `${editPatientData?.name}'s information has been saved successfully`,
               });
             }}>
               Save Changes
