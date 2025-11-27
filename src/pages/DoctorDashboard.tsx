@@ -10,12 +10,10 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Calendar, Users, FileText, TrendingUp, Clock, Phone, Mail, MapPin, Activity, BarChart3 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { useUserRole } from "@/hooks/useUserRole";
 
 const DoctorDashboard = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const { role, loading: roleLoading } = useUserRole();
   const [selectedAppointment, setSelectedAppointment] = useState<any>(null);
   const [showDetailsDialog, setShowDetailsDialog] = useState(false);
   const [showConsultationDialog, setShowConsultationDialog] = useState(false);
@@ -31,25 +29,11 @@ const DoctorDashboard = () => {
   const [slotData, setSlotData] = useState({ time: '', status: 'Available' });
 
   useEffect(() => {
-    const checkAuth = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        navigate("/doctor-auth");
-      }
-    };
-    checkAuth();
-  }, [navigate]);
-
-  // Redirect if user doesn't have 'doctor' role
-  useEffect(() => {
-    if (!roleLoading && role && role !== "doctor") {
-      if (role === "user") {
-        navigate("/dashboard");
-      } else if (role === "admin") {
-        navigate("/admin-dashboard");
-      }
+    // Check if doctor is logged in
+    if (localStorage.getItem("isDoctorLoggedIn") !== "true") {
+      navigate("/doctor-auth");
     }
-  }, [role, roleLoading, navigate]);
+  }, [navigate]);
 
   const todayAppointments = [
     { id: 1, patient: "Rahul Mehta", time: "10:00 AM", type: "In-Person", status: "Confirmed" },
