@@ -276,14 +276,21 @@ const AdminDashboard = () => {
                         <p className="text-sm text-muted-foreground">{doctor.patients} patients</p>
                         <div className="flex gap-2">
                           <Button 
-                            variant="outline" 
+                            variant={doctor.status === "Verified" ? "secondary" : "default"}
                             size="sm"
                             onClick={() => {
-                              setEditDoctorData({ ...doctor });
-                              setShowEditDoctorDialog(true);
+                              const newStatus = doctor.status === "Verified" ? "Pending" : "Verified";
+                              const updatedDoctors = doctors.map(d => 
+                                d.id === doctor.id ? { ...d, status: newStatus } : d
+                              );
+                              setDoctors(updatedDoctors);
+                              toast({
+                                title: newStatus === "Verified" ? "Doctor Verified" : "Verification Removed",
+                                description: `${doctor.name} has been ${newStatus === "Verified" ? "verified" : "marked as pending"}`,
+                              });
                             }}
                           >
-                            Edit
+                            {doctor.status === "Verified" ? "Unverify" : "Verify"}
                           </Button>
                           <Button 
                             variant="outline" 
