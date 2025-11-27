@@ -418,7 +418,7 @@ const DoctorDashboard = () => {
 
       {/* Patient Profile Dialog */}
       <Dialog open={showPatientProfileDialog} onOpenChange={setShowPatientProfileDialog}>
-        <DialogContent className="max-w-2xl">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Patient Profile</DialogTitle>
             <DialogDescription>Detailed medical history and information</DialogDescription>
