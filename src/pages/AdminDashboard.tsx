@@ -19,6 +19,22 @@ const AdminDashboard = () => {
   const [showAddUserDialog, setShowAddUserDialog] = useState(false);
   const [showAddDoctorDialog, setShowAddDoctorDialog] = useState(false);
   const [showAddClinicDialog, setShowAddClinicDialog] = useState(false);
+  
+  // View/Edit states
+  const [showViewUserDialog, setShowViewUserDialog] = useState(false);
+  const [showEditUserDialog, setShowEditUserDialog] = useState(false);
+  const [selectedUser, setSelectedUser] = useState<any>(null);
+  const [editUserData, setEditUserData] = useState<any>(null);
+  
+  const [showViewDoctorDialog, setShowViewDoctorDialog] = useState(false);
+  const [showEditDoctorDialog, setShowEditDoctorDialog] = useState(false);
+  const [selectedDoctor, setSelectedDoctor] = useState<any>(null);
+  const [editDoctorData, setEditDoctorData] = useState<any>(null);
+  
+  const [showViewClinicDialog, setShowViewClinicDialog] = useState(false);
+  const [showEditClinicDialog, setShowEditClinicDialog] = useState(false);
+  const [selectedClinic, setSelectedClinic] = useState<any>(null);
+  const [editClinicData, setEditClinicData] = useState<any>(null);
 
   useEffect(() => {
     // Check if admin is logged in
@@ -27,23 +43,23 @@ const AdminDashboard = () => {
     }
   }, [navigate]);
 
-  const users = [
+  const [users, setUsers] = useState([
     { id: 1, name: "Rahul Mehta", email: "rahul@example.com", role: "Patient", status: "Active", joined: "2024-01-15" },
     { id: 2, name: "Priya Singh", email: "priya@example.com", role: "Patient", status: "Active", joined: "2024-01-20" },
     { id: 3, name: "Amit Patel", email: "amit@example.com", role: "Patient", status: "Inactive", joined: "2024-01-10" },
-  ];
+  ]);
 
-  const doctors = [
+  const [doctors, setDoctors] = useState([
     { id: 1, name: "Dr. Sarah Johnson", specialty: "Cardiologist", email: "sarah@clinic.com", status: "Verified", patients: 89 },
     { id: 2, name: "Dr. Michael Chen", specialty: "Dermatologist", email: "michael@clinic.com", status: "Verified", patients: 156 },
     { id: 3, name: "Dr. Priya Sharma", specialty: "Pediatrician", email: "priya@clinic.com", status: "Pending", patients: 45 },
-  ];
+  ]);
 
-  const clinics = [
+  const [clinics, setClinics] = useState([
     { id: 1, name: "Apollo Clinic", location: "Mumbai", doctors: 12, rating: 4.8, status: "Active" },
     { id: 2, name: "Max Healthcare", location: "Delhi", doctors: 25, rating: 4.9, status: "Active" },
     { id: 3, name: "Fortis Hospital", location: "Bangalore", doctors: 18, rating: 4.7, status: "Active" },
-  ];
+  ]);
 
   const appointments = [
     { id: 1, patient: "Rahul Mehta", doctor: "Dr. Sarah Johnson", clinic: "Apollo Clinic", date: "2024-01-25", time: "10:00 AM", status: "Confirmed" },
@@ -203,8 +219,26 @@ const AdminDashboard = () => {
                       <div className="text-left sm:text-right space-y-2">
                         <p className="text-sm text-muted-foreground">Joined {user.joined}</p>
                         <div className="flex gap-2">
-                          <Button variant="outline" size="sm">Edit</Button>
-                          <Button variant="outline" size="sm">View</Button>
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => {
+                              setEditUserData({ ...user });
+                              setShowEditUserDialog(true);
+                            }}
+                          >
+                            Edit
+                          </Button>
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => {
+                              setSelectedUser(user);
+                              setShowViewUserDialog(true);
+                            }}
+                          >
+                            View
+                          </Button>
                         </div>
                       </div>
                     </div>
@@ -241,8 +275,26 @@ const AdminDashboard = () => {
                       <div className="text-left sm:text-right space-y-2">
                         <p className="text-sm text-muted-foreground">{doctor.patients} patients</p>
                         <div className="flex gap-2">
-                          <Button variant="outline" size="sm">Verify</Button>
-                          <Button variant="outline" size="sm">View</Button>
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => {
+                              setEditDoctorData({ ...doctor });
+                              setShowEditDoctorDialog(true);
+                            }}
+                          >
+                            Edit
+                          </Button>
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => {
+                              setSelectedDoctor(doctor);
+                              setShowViewDoctorDialog(true);
+                            }}
+                          >
+                            View
+                          </Button>
                         </div>
                       </div>
                     </div>
@@ -279,8 +331,26 @@ const AdminDashboard = () => {
                       <div className="text-left sm:text-right space-y-2">
                         <Badge variant={clinic.status === "Active" ? "default" : "secondary"}>{clinic.status}</Badge>
                         <div className="flex gap-2">
-                          <Button variant="outline" size="sm">Edit</Button>
-                          <Button variant="outline" size="sm">View</Button>
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => {
+                              setEditClinicData({ ...clinic });
+                              setShowEditClinicDialog(true);
+                            }}
+                          >
+                            Edit
+                          </Button>
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => {
+                              setSelectedClinic(clinic);
+                              setShowViewClinicDialog(true);
+                            }}
+                          >
+                            View
+                          </Button>
                         </div>
                       </div>
                     </div>
@@ -576,6 +646,318 @@ const AdminDashboard = () => {
               });
             }}>
               Add Clinic
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* View User Dialog */}
+      <Dialog open={showViewUserDialog} onOpenChange={setShowViewUserDialog}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>User Details</DialogTitle>
+            <DialogDescription>Complete user information</DialogDescription>
+          </DialogHeader>
+          {selectedUser && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">Full Name</p>
+                  <p className="text-base font-semibold">{selectedUser.name}</p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">Email</p>
+                  <p className="text-base">{selectedUser.email}</p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">Role</p>
+                  <Badge variant="outline">{selectedUser.role}</Badge>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">Status</p>
+                  <Badge variant={selectedUser.status === "Active" ? "default" : "secondary"}>{selectedUser.status}</Badge>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">Joined Date</p>
+                  <p className="text-base">{selectedUser.joined}</p>
+                </div>
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowViewUserDialog(false)}>Close</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit User Dialog */}
+      <Dialog open={showEditUserDialog} onOpenChange={setShowEditUserDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit User</DialogTitle>
+            <DialogDescription>Update user information</DialogDescription>
+          </DialogHeader>
+          {editUserData && (
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label>Full Name</Label>
+                <Input
+                  value={editUserData.name}
+                  onChange={(e) => setEditUserData({ ...editUserData, name: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Email</Label>
+                <Input
+                  type="email"
+                  value={editUserData.email}
+                  onChange={(e) => setEditUserData({ ...editUserData, email: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Role</Label>
+                <Select value={editUserData.role} onValueChange={(value) => setEditUserData({ ...editUserData, role: value })}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Patient">Patient</SelectItem>
+                    <SelectItem value="Doctor">Doctor</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Status</Label>
+                <Select value={editUserData.status} onValueChange={(value) => setEditUserData({ ...editUserData, status: value })}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Active">Active</SelectItem>
+                    <SelectItem value="Inactive">Inactive</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowEditUserDialog(false)}>Cancel</Button>
+            <Button onClick={() => {
+              const updatedUsers = users.map(u => u.id === editUserData.id ? editUserData : u);
+              setUsers(updatedUsers);
+              setShowEditUserDialog(false);
+              toast({
+                title: "User Updated",
+                description: `${editUserData.name}'s information has been updated`,
+              });
+            }}>
+              Save Changes
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* View Doctor Dialog */}
+      <Dialog open={showViewDoctorDialog} onOpenChange={setShowViewDoctorDialog}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Doctor Details</DialogTitle>
+            <DialogDescription>Complete doctor information</DialogDescription>
+          </DialogHeader>
+          {selectedDoctor && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">Full Name</p>
+                  <p className="text-base font-semibold">{selectedDoctor.name}</p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">Email</p>
+                  <p className="text-base">{selectedDoctor.email}</p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">Specialty</p>
+                  <Badge variant="outline">{selectedDoctor.specialty}</Badge>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">Status</p>
+                  <Badge variant={selectedDoctor.status === "Verified" ? "default" : "secondary"}>{selectedDoctor.status}</Badge>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">Total Patients</p>
+                  <p className="text-base">{selectedDoctor.patients}</p>
+                </div>
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowViewDoctorDialog(false)}>Close</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Doctor Dialog */}
+      <Dialog open={showEditDoctorDialog} onOpenChange={setShowEditDoctorDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Doctor</DialogTitle>
+            <DialogDescription>Update doctor information</DialogDescription>
+          </DialogHeader>
+          {editDoctorData && (
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label>Full Name</Label>
+                <Input
+                  value={editDoctorData.name}
+                  onChange={(e) => setEditDoctorData({ ...editDoctorData, name: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Email</Label>
+                <Input
+                  type="email"
+                  value={editDoctorData.email}
+                  onChange={(e) => setEditDoctorData({ ...editDoctorData, email: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Specialty</Label>
+                <Input
+                  value={editDoctorData.specialty}
+                  onChange={(e) => setEditDoctorData({ ...editDoctorData, specialty: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Status</Label>
+                <Select value={editDoctorData.status} onValueChange={(value) => setEditDoctorData({ ...editDoctorData, status: value })}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Verified">Verified</SelectItem>
+                    <SelectItem value="Pending">Pending</SelectItem>
+                    <SelectItem value="Rejected">Rejected</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowEditDoctorDialog(false)}>Cancel</Button>
+            <Button onClick={() => {
+              const updatedDoctors = doctors.map(d => d.id === editDoctorData.id ? editDoctorData : d);
+              setDoctors(updatedDoctors);
+              setShowEditDoctorDialog(false);
+              toast({
+                title: "Doctor Updated",
+                description: `${editDoctorData.name}'s information has been updated`,
+              });
+            }}>
+              Save Changes
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* View Clinic Dialog */}
+      <Dialog open={showViewClinicDialog} onOpenChange={setShowViewClinicDialog}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Clinic Details</DialogTitle>
+            <DialogDescription>Complete clinic information</DialogDescription>
+          </DialogHeader>
+          {selectedClinic && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">Clinic Name</p>
+                  <p className="text-base font-semibold">{selectedClinic.name}</p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">Location</p>
+                  <p className="text-base">{selectedClinic.location}</p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">Total Doctors</p>
+                  <p className="text-base">{selectedClinic.doctors}</p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">Rating</p>
+                  <Badge variant="default">⭐ {selectedClinic.rating}</Badge>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-muted-foreground">Status</p>
+                  <Badge variant={selectedClinic.status === "Active" ? "default" : "secondary"}>{selectedClinic.status}</Badge>
+                </div>
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowViewClinicDialog(false)}>Close</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Clinic Dialog */}
+      <Dialog open={showEditClinicDialog} onOpenChange={setShowEditClinicDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Clinic</DialogTitle>
+            <DialogDescription>Update clinic information</DialogDescription>
+          </DialogHeader>
+          {editClinicData && (
+            <div className="space-y-4">
+              <div className="space-y-2">
+                <Label>Clinic Name</Label>
+                <Input
+                  value={editClinicData.name}
+                  onChange={(e) => setEditClinicData({ ...editClinicData, name: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Location</Label>
+                <Input
+                  value={editClinicData.location}
+                  onChange={(e) => setEditClinicData({ ...editClinicData, location: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Rating</Label>
+                <Input
+                  type="number"
+                  step="0.1"
+                  max="5"
+                  min="0"
+                  value={editClinicData.rating}
+                  onChange={(e) => setEditClinicData({ ...editClinicData, rating: parseFloat(e.target.value) })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Status</Label>
+                <Select value={editClinicData.status} onValueChange={(value) => setEditClinicData({ ...editClinicData, status: value })}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="Active">Active</SelectItem>
+                    <SelectItem value="Inactive">Inactive</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowEditClinicDialog(false)}>Cancel</Button>
+            <Button onClick={() => {
+              const updatedClinics = clinics.map(c => c.id === editClinicData.id ? editClinicData : c);
+              setClinics(updatedClinics);
+              setShowEditClinicDialog(false);
+              toast({
+                title: "Clinic Updated",
+                description: `${editClinicData.name}'s information has been updated`,
+              });
+            }}>
+              Save Changes
             </Button>
           </DialogFooter>
         </DialogContent>
