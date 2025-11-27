@@ -36,6 +36,12 @@ const Dashboard = () => {
   const [prescriptions, setPrescriptions] = useState<any[]>([]);
   const [addRecordDialog, setAddRecordDialog] = useState(false);
   const [addPrescriptionDialog, setAddPrescriptionDialog] = useState(false);
+  const [viewRecordDialog, setViewRecordDialog] = useState(false);
+  const [editRecordDialog, setEditRecordDialog] = useState(false);
+  const [viewPrescriptionDialog, setViewPrescriptionDialog] = useState(false);
+  const [editPrescriptionDialog, setEditPrescriptionDialog] = useState(false);
+  const [selectedRecord, setSelectedRecord] = useState<any>(null);
+  const [selectedPrescription, setSelectedPrescription] = useState<any>(null);
   const [newRecord, setNewRecord] = useState({ title: "", date: "", type: "", notes: "" });
   const [newPrescription, setNewPrescription] = useState({ medicine: "", dosage: "", frequency: "", duration: "", prescribedBy: "", date: "" });
 
@@ -289,6 +295,107 @@ const Dashboard = () => {
     }
   };
 
+  const handleViewRecord = (record: any) => {
+    setSelectedRecord(record);
+    setViewRecordDialog(true);
+  };
+
+  const handleEditRecord = (record: any) => {
+    setSelectedRecord(record);
+    setNewRecord({
+      title: record.title,
+      date: record.date,
+      type: record.type,
+      notes: record.notes || "",
+    });
+    setEditRecordDialog(true);
+  };
+
+  const handleUpdateRecord = () => {
+    if (!newRecord.title || !newRecord.date || !newRecord.type) {
+      toast({
+        title: "Error",
+        description: "Please fill in all required fields",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const updatedRecords = medicalRecords.map(record =>
+      record.id === selectedRecord.id ? { ...record, ...newRecord } : record
+    );
+    setMedicalRecords(updatedRecords);
+    localStorage.setItem("medicalRecords", JSON.stringify(updatedRecords));
+
+    toast({
+      title: "Record Updated",
+      description: "Medical record has been updated successfully",
+    });
+
+    setNewRecord({ title: "", date: "", type: "", notes: "" });
+    setEditRecordDialog(false);
+  };
+
+  const handleViewPrescription = (prescription: any) => {
+    setSelectedPrescription(prescription);
+    setViewPrescriptionDialog(true);
+  };
+
+  const handleEditPrescription = (prescription: any) => {
+    setSelectedPrescription(prescription);
+    setNewPrescription({
+      medicine: prescription.medication,
+      dosage: prescription.dosage,
+      frequency: prescription.frequency,
+      duration: "",
+      prescribedBy: prescription.doctor || "",
+      date: prescription.start_date || "",
+    });
+    setEditPrescriptionDialog(true);
+  };
+
+  const handleUpdatePrescription = async () => {
+    if (!newPrescription.medicine || !newPrescription.dosage || !newPrescription.frequency) {
+      toast({
+        title: "Error",
+        description: "Please fill in all required fields",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    try {
+      const { error } = await supabase
+        .from('prescriptions')
+        .update({
+          medication: newPrescription.medicine,
+          dosage: newPrescription.dosage,
+          frequency: newPrescription.frequency,
+          doctor: newPrescription.prescribedBy,
+          start_date: newPrescription.date || new Date().toISOString().split('T')[0],
+        })
+        .eq('id', selectedPrescription.id);
+
+      if (error) throw error;
+
+      await loadUserData(user.id);
+
+      toast({
+        title: "Prescription Updated",
+        description: "Prescription has been updated successfully",
+      });
+
+      setNewPrescription({ medicine: "", dosage: "", frequency: "", duration: "", prescribedBy: "", date: "" });
+      setEditPrescriptionDialog(false);
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to update prescription",
+        variant: "destructive",
+      });
+    }
+  };
+
   const totalAppointments = upcomingAppointments?.length || 0;
   const upcomingCount = upcomingAppointments.filter(apt => apt.status === 'upcoming' || apt.status === 'confirmed').length;
   const pastCount = upcomingAppointments.filter(apt => apt.status === 'completed').length;
@@ -462,8 +569,8 @@ const Dashboard = () => {
                           </div>
                           <div className="flex items-center gap-2">
                             <Badge variant="secondary">{record.type}</Badge>
-                            <Button variant="outline" size="sm">View</Button>
-                            <Button variant="outline" size="sm">Edit</Button>
+                            <Button variant="outline" size="sm" onClick={() => handleViewRecord(record)}>View</Button>
+                            <Button variant="outline" size="sm" onClick={() => handleEditRecord(record)}>Edit</Button>
                           </div>
                         </div>
                         {record.notes && (
@@ -504,8 +611,8 @@ const Dashboard = () => {
                           </div>
                           <div className="flex items-center gap-2">
                             <Badge variant="default">Active</Badge>
-                            <Button variant="outline" size="sm">View</Button>
-                            <Button variant="outline" size="sm">Edit</Button>
+                            <Button variant="outline" size="sm" onClick={() => handleViewPrescription(prescription)}>View</Button>
+                            <Button variant="outline" size="sm" onClick={() => handleEditPrescription(prescription)}>Edit</Button>
                           </div>
                         </div>
                         <div className="grid grid-cols-2 gap-2 text-sm">
@@ -792,6 +899,196 @@ const Dashboard = () => {
             </Button>
             <Button onClick={handleAddPrescription}>
               Add Prescription
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={viewRecordDialog} onOpenChange={setViewRecordDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Medical Record Details</DialogTitle>
+          </DialogHeader>
+          {selectedRecord && (
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label className="font-semibold">Title</Label>
+                <p className="text-sm">{selectedRecord.title}</p>
+              </div>
+              <div className="space-y-2">
+                <Label className="font-semibold">Type</Label>
+                <Badge variant="secondary">{selectedRecord.type}</Badge>
+              </div>
+              <div className="space-y-2">
+                <Label className="font-semibold">Date</Label>
+                <p className="text-sm">{selectedRecord.date}</p>
+              </div>
+              {selectedRecord.notes && (
+                <div className="space-y-2">
+                  <Label className="font-semibold">Notes</Label>
+                  <p className="text-sm text-muted-foreground">{selectedRecord.notes}</p>
+                </div>
+              )}
+            </div>
+          )}
+          <DialogFooter>
+            <Button onClick={() => setViewRecordDialog(false)}>Close</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={editRecordDialog} onOpenChange={setEditRecordDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Medical Record</DialogTitle>
+            <DialogDescription>
+              Update the medical record information
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="editRecordTitle">Title *</Label>
+              <Input
+                id="editRecordTitle"
+                value={newRecord.title}
+                onChange={(e) => setNewRecord({ ...newRecord, title: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="editRecordType">Type *</Label>
+              <Input
+                id="editRecordType"
+                value={newRecord.type}
+                onChange={(e) => setNewRecord({ ...newRecord, type: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="editRecordDate">Date *</Label>
+              <Input
+                id="editRecordDate"
+                type="date"
+                value={newRecord.date}
+                onChange={(e) => setNewRecord({ ...newRecord, date: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="editRecordNotes">Notes</Label>
+              <Input
+                id="editRecordNotes"
+                value={newRecord.notes}
+                onChange={(e) => setNewRecord({ ...newRecord, notes: e.target.value })}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditRecordDialog(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleUpdateRecord}>
+              Save Changes
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={viewPrescriptionDialog} onOpenChange={setViewPrescriptionDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Prescription Details</DialogTitle>
+          </DialogHeader>
+          {selectedPrescription && (
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label className="font-semibold">Medication</Label>
+                <p className="text-lg">{selectedPrescription.medication}</p>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label className="font-semibold">Dosage</Label>
+                  <p className="text-sm">{selectedPrescription.dosage}</p>
+                </div>
+                <div className="space-y-2">
+                  <Label className="font-semibold">Frequency</Label>
+                  <p className="text-sm">{selectedPrescription.frequency}</p>
+                </div>
+              </div>
+              {selectedPrescription.doctor && (
+                <div className="space-y-2">
+                  <Label className="font-semibold">Prescribed By</Label>
+                  <p className="text-sm">{selectedPrescription.doctor}</p>
+                </div>
+              )}
+              {selectedPrescription.start_date && (
+                <div className="space-y-2">
+                  <Label className="font-semibold">Start Date</Label>
+                  <p className="text-sm">{selectedPrescription.start_date}</p>
+                </div>
+              )}
+            </div>
+          )}
+          <DialogFooter>
+            <Button onClick={() => setViewPrescriptionDialog(false)}>Close</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={editPrescriptionDialog} onOpenChange={setEditPrescriptionDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Prescription</DialogTitle>
+            <DialogDescription>
+              Update the prescription information
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="editMedicine">Medicine Name *</Label>
+              <Input
+                id="editMedicine"
+                value={newPrescription.medicine}
+                onChange={(e) => setNewPrescription({ ...newPrescription, medicine: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="editDosage">Dosage *</Label>
+              <Input
+                id="editDosage"
+                value={newPrescription.dosage}
+                onChange={(e) => setNewPrescription({ ...newPrescription, dosage: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="editFrequency">Frequency *</Label>
+              <Input
+                id="editFrequency"
+                value={newPrescription.frequency}
+                onChange={(e) => setNewPrescription({ ...newPrescription, frequency: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="editPrescribedBy">Prescribed By</Label>
+              <Input
+                id="editPrescribedBy"
+                value={newPrescription.prescribedBy}
+                onChange={(e) => setNewPrescription({ ...newPrescription, prescribedBy: e.target.value })}
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="editPrescriptionDate">Start Date</Label>
+              <Input
+                id="editPrescriptionDate"
+                type="date"
+                value={newPrescription.date}
+                onChange={(e) => setNewPrescription({ ...newPrescription, date: e.target.value })}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEditPrescriptionDialog(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleUpdatePrescription}>
+              Save Changes
             </Button>
           </DialogFooter>
         </DialogContent>
