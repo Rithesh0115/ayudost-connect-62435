@@ -12,10 +12,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Users, Building2, Calendar, DollarSign, TrendingUp, Activity, Mail, Phone, MapPin, Clock, CheckCircle, XCircle, AlertCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useUserRole } from "@/hooks/useUserRole";
+import { supabase } from "@/integrations/supabase/client";
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { role, loading: roleLoading } = useUserRole();
   const [showAddUserDialog, setShowAddUserDialog] = useState(false);
   const [showAddDoctorDialog, setShowAddDoctorDialog] = useState(false);
   const [showAddClinicDialog, setShowAddClinicDialog] = useState(false);
@@ -37,11 +40,25 @@ const AdminDashboard = () => {
   const [editClinicData, setEditClinicData] = useState<any>(null);
 
   useEffect(() => {
-    // Check if admin is logged in
-    if (localStorage.getItem("isAdminLoggedIn") !== "true") {
-      navigate("/admin-auth");
-    }
+    const checkAuth = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        navigate("/admin-auth");
+      }
+    };
+    checkAuth();
   }, [navigate]);
+
+  // Redirect if user doesn't have 'admin' role
+  useEffect(() => {
+    if (!roleLoading && role && role !== "admin") {
+      if (role === "user") {
+        navigate("/dashboard");
+      } else if (role === "doctor") {
+        navigate("/doctor-dashboard");
+      }
+    }
+  }, [role, roleLoading, navigate]);
 
   const [users, setUsers] = useState([
     { id: 1, name: "Rahul Mehta", email: "rahul@example.com", role: "Patient", status: "Active", joined: "2024-01-15" },

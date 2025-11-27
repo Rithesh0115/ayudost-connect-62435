@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Shield } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 const AdminAuth = () => {
   const navigate = useNavigate();
@@ -19,29 +20,50 @@ const AdminAuth = () => {
     setIsLoading(true);
     
     const formData = new FormData(e.target as HTMLFormElement);
-    const username = formData.get("username") as string;
+    const email = formData.get("email") as string;
     const password = formData.get("password") as string;
 
-    // Predefined credentials
-    if (username === "Ayudost" && password === "Ayudost@123") {
-      setTimeout(() => {
-        localStorage.setItem("isAdminLoggedIn", "true");
-        setIsLoading(false);
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (error) throw error;
+
+      if (data.user) {
+        // Check if user has admin role
+        const { data: roleData, error: roleError } = await supabase
+          .from("user_roles")
+          .select("role")
+          .eq("user_id", data.user.id)
+          .single();
+
+        if (roleError || roleData?.role !== "admin") {
+          await supabase.auth.signOut();
+          toast({
+            title: "Access Denied",
+            description: "You don't have admin privileges",
+            variant: "destructive",
+          });
+          setIsLoading(false);
+          return;
+        }
+
         toast({
           title: "Admin Access Granted",
           description: "Welcome to the admin dashboard",
         });
-        navigate("/admin");
-      }, 1000);
-    } else {
-      setTimeout(() => {
-        setIsLoading(false);
-        toast({
-          title: "Access Denied",
-          description: "Invalid admin credentials",
-          variant: "destructive",
-        });
-      }, 1000);
+        navigate("/admin-dashboard");
+      }
+    } catch (error: any) {
+      toast({
+        title: "Login Failed",
+        description: error.message || "Invalid credentials",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -65,12 +87,12 @@ const AdminAuth = () => {
           <CardContent>
             <form onSubmit={handleLogin} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="username">Username</Label>
+                <Label htmlFor="email">Email</Label>
                 <Input
-                  id="username"
-                  name="username"
-                  type="text"
-                  placeholder="Enter admin username"
+                  id="email"
+                  name="email"
+                  type="email"
+                  placeholder="admin@example.com"
                   required
                 />
               </div>
@@ -80,7 +102,7 @@ const AdminAuth = () => {
                   id="password"
                   name="password"
                   type="password"
-                  placeholder="Enter admin password"
+                  placeholder="Enter your password"
                   required
                 />
               </div>
