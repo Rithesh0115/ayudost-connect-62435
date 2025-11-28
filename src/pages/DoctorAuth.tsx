@@ -9,6 +9,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Stethoscope } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 const DoctorAuth = () => {
   const navigate = useNavigate();
@@ -20,27 +21,42 @@ const DoctorAuth = () => {
     setIsLoading(true);
     
     const formData = new FormData(e.target as HTMLFormElement);
-    const name = formData.get("name") as string;
+    const email = formData.get("email") as string;
     const password = formData.get("password") as string;
 
-    if (name && password) {
-      setTimeout(() => {
-        localStorage.setItem("isDoctorLoggedIn", "true");
-        localStorage.setItem("doctorName", name);
-        setIsLoading(false);
-        toast({
-          title: "Login Successful",
-          description: "Welcome back, Doctor!",
-        });
-        navigate("/doctor-dashboard");
-      }, 1000);
-    } else {
-      setIsLoading(false);
+    try {
+      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+
+      if (authError) throw authError;
+
+      // Verify user has doctor role
+      const { data: roleData, error: roleError } = await supabase.rpc('get_user_role', {
+        _user_id: authData.user.id
+      });
+
+      if (roleError) throw roleError;
+
+      if (roleData !== 'doctor') {
+        await supabase.auth.signOut();
+        throw new Error("This account is not registered as a doctor");
+      }
+
+      toast({
+        title: "Login Successful",
+        description: "Welcome back, Doctor!",
+      });
+      navigate("/doctor-dashboard");
+    } catch (error: any) {
       toast({
         title: "Login Failed",
-        description: "Please enter valid credentials",
+        description: error.message || "Please check your credentials",
         variant: "destructive",
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -49,27 +65,47 @@ const DoctorAuth = () => {
     setIsLoading(true);
     
     const formData = new FormData(e.target as HTMLFormElement);
-    const name = formData.get("name") as string;
+    const email = formData.get("email") as string;
+    const fullName = formData.get("fullName") as string;
     const password = formData.get("password") as string;
 
-    if (name && password) {
-      setTimeout(() => {
-        localStorage.setItem("isDoctorLoggedIn", "true");
-        localStorage.setItem("doctorName", name);
-        setIsLoading(false);
-        toast({
-          title: "Account Created",
-          description: "Welcome to AyuDost!",
-        });
-        navigate("/doctor-dashboard");
-      }, 1000);
-    } else {
-      setIsLoading(false);
+    try {
+      // Create Supabase Auth account
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            full_name: fullName,
+            is_doctor: true,
+          },
+          emailRedirectTo: `${window.location.origin}/doctor-dashboard`,
+        },
+      });
+
+      if (authError) throw authError;
+      if (!authData.user) throw new Error("Failed to create account");
+
+      // Assign doctor role
+      const { error: roleError } = await supabase.rpc('assign_doctor_role', {
+        user_id_param: authData.user.id
+      });
+
+      if (roleError) throw roleError;
+
+      toast({
+        title: "Account Created",
+        description: "Welcome to AyuDost!",
+      });
+      navigate("/doctor-dashboard");
+    } catch (error: any) {
       toast({
         title: "Signup Failed",
-        description: "Please fill all required fields",
+        description: error.message || "Please try again",
         variant: "destructive",
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -100,12 +136,12 @@ const DoctorAuth = () => {
               <TabsContent value="login">
                 <form onSubmit={handleLogin} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="login-name">Name</Label>
+                    <Label htmlFor="login-email">Email</Label>
                     <Input
-                      id="login-name"
-                      name="name"
-                      type="text"
-                      placeholder="Enter your name"
+                      id="login-email"
+                      name="email"
+                      type="email"
+                      placeholder="Enter your email"
                       required
                     />
                   </div>
@@ -128,10 +164,20 @@ const DoctorAuth = () => {
               <TabsContent value="signup">
                 <form onSubmit={handleSignup} className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="signup-name">Name</Label>
+                    <Label htmlFor="signup-email">Email</Label>
+                    <Input
+                      id="signup-email"
+                      name="email"
+                      type="email"
+                      placeholder="Enter your email"
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="signup-name">Full Name</Label>
                     <Input
                       id="signup-name"
-                      name="name"
+                      name="fullName"
                       type="text"
                       placeholder="Enter your full name"
                       required
@@ -145,6 +191,7 @@ const DoctorAuth = () => {
                       type="password"
                       placeholder="Create a password"
                       required
+                      minLength={6}
                     />
                   </div>
                   <Button type="submit" className="w-full" disabled={isLoading}>

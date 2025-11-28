@@ -29,11 +29,31 @@ const DoctorDashboard = () => {
   const [slotData, setSlotData] = useState({ time: '', status: 'Available' });
 
   useEffect(() => {
-    // Check if doctor is logged in
-    if (localStorage.getItem("isDoctorLoggedIn") !== "true") {
-      navigate("/doctor-auth");
-    }
-  }, [navigate]);
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        navigate("/doctor-auth");
+        return;
+      }
+
+      // Verify user has doctor role
+      const { data: roleData, error: roleError } = await supabase.rpc('get_user_role', {
+        _user_id: session.user.id
+      });
+
+      if (roleError || roleData !== 'doctor') {
+        toast({
+          title: "Access Denied",
+          description: "You must be a doctor to access this dashboard",
+          variant: "destructive",
+        });
+        navigate("/doctor-auth");
+      }
+    };
+
+    checkAuth();
+  }, [navigate, toast]);
 
   const todayAppointments = [
     { id: 1, patient: "Rahul Mehta", time: "10:00 AM", type: "In-Person", status: "Confirmed" },
