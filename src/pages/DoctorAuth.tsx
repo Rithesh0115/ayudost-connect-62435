@@ -111,11 +111,8 @@ const DoctorAuth = () => {
       if (error) throw error;
 
       if (data.user) {
-        // Insert doctor role
-        await supabase.from('user_roles').insert({
-          user_id: data.user.id,
-          role: 'doctor',
-        });
+        // Assign doctor role using SECURITY DEFINER function
+        await supabase.rpc('assign_doctor_role', { user_id_param: data.user.id });
 
         // Create doctor profile
         await supabase.from('doctor_profiles').insert({
