@@ -13,7 +13,6 @@ import { Calendar, FileText, User, Bell, Heart, Users, Upload, Download } from "
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { AppointmentCalendar } from "@/components/AppointmentCalendar";
-import { NotificationBell } from "@/components/NotificationBell";
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -512,16 +511,13 @@ const Dashboard = () => {
       
       <main className="flex-1 py-12 px-4 bg-muted/30">
         <div className="container mx-auto max-w-7xl">
-          <div className="mb-8 flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-2">
-                Welcome back, {profile.full_name?.split(' ')[0] || 'User'}!
-              </h1>
-              <p className="text-muted-foreground">
-                Manage your appointments and health records
-              </p>
-            </div>
-            <NotificationBell />
+          <div className="mb-8">
+            <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-2">
+              Welcome back, {profile.full_name?.split(' ')[0] || 'User'}!
+            </h1>
+            <p className="text-muted-foreground">
+              Manage your appointments and health records
+            </p>
           </div>
 
           {/* Quick Stats */}
