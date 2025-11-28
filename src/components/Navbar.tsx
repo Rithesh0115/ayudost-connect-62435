@@ -86,10 +86,6 @@ const Navbar = () => {
           {isLoggedIn ? (
             <>
               <NotificationBell />
-              <div className="flex flex-col items-start">
-                <span className="text-sm font-medium">User</span>
-                <span className="text-xs text-muted-foreground">authenticated</span>
-              </div>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="icon" className="rounded-full">
@@ -122,10 +118,6 @@ const Navbar = () => {
           ) : isDoctorLoggedIn ? (
             <>
               <NotificationBell />
-              <div className="flex flex-col items-start">
-                <span className="text-sm font-medium">Doctor</span>
-                <span className="text-xs text-muted-foreground">authenticated</span>
-              </div>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="icon" className="rounded-full">
@@ -158,10 +150,6 @@ const Navbar = () => {
           ) : isAdminLoggedIn ? (
             <>
               <NotificationBell />
-              <div className="flex flex-col items-start">
-                <span className="text-sm font-medium">Admin</span>
-                <span className="text-xs text-muted-foreground">authenticated</span>
-              </div>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="icon" className="rounded-full">
@@ -235,10 +223,6 @@ const Navbar = () => {
                       <Avatar className="h-12 w-12">
                         <AvatarFallback className="bg-primary text-primary-foreground text-lg">U</AvatarFallback>
                       </Avatar>
-                      <div className="flex flex-col">
-                        <span className="text-sm font-medium">User</span>
-                        <span className="text-xs text-muted-foreground">authenticated</span>
-                      </div>
                     </div>
                     <Link to="/dashboard">
                       <Button variant="outline" className="w-full justify-start">
@@ -263,10 +247,6 @@ const Navbar = () => {
                       <Avatar className="h-12 w-12">
                         <AvatarFallback className="bg-green-600 text-white text-lg">D</AvatarFallback>
                       </Avatar>
-                      <div className="flex flex-col">
-                        <span className="text-sm font-medium">Doctor</span>
-                        <span className="text-xs text-muted-foreground">authenticated</span>
-                      </div>
                     </div>
                     <Link to="/doctor-dashboard">
                       <Button variant="outline" className="w-full justify-start">
@@ -291,10 +271,6 @@ const Navbar = () => {
                       <Avatar className="h-12 w-12">
                         <AvatarFallback className="bg-primary text-primary-foreground text-lg">A</AvatarFallback>
                       </Avatar>
-                      <div className="flex flex-col">
-                        <span className="text-sm font-medium">Admin</span>
-                        <span className="text-xs text-muted-foreground">authenticated</span>
-                      </div>
                     </div>
                     <Link to="/admin">
                       <Button variant="outline" className="w-full justify-start">
