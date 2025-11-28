@@ -13,14 +13,23 @@ import { supabase } from "@/integrations/supabase/client";
 const Navbar = () => {
   const navigate = useNavigate();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [isDoctorLoggedIn, setIsDoctorLoggedIn] = useState(false);
-  const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(false);
+  const [userRole, setUserRole] = useState<'admin' | 'doctor' | 'user' | null>(null);
 
   useEffect(() => {
+    const fetchUserRole = async (userId: string) => {
+      const { data, error } = await supabase.rpc('get_user_role', { _user_id: userId });
+      if (!error && data) {
+        setUserRole(data);
+      }
+    };
+
     // Check Supabase auth session
     const checkSession = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       setIsLoggedIn(!!session);
+      if (session?.user) {
+        await fetchUserRole(session.user.id);
+      }
     };
     
     checkSession();
@@ -28,22 +37,20 @@ const Navbar = () => {
     // Listen for auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setIsLoggedIn(!!session);
+      if (session?.user) {
+        fetchUserRole(session.user.id);
+      } else {
+        setUserRole(null);
+      }
     });
-
-    // Keep localStorage checks for doctor/admin (for now)
-    setIsDoctorLoggedIn(localStorage.getItem("isDoctorLoggedIn") === "true");
-    setIsAdminLoggedIn(localStorage.getItem("isAdminLoggedIn") === "true");
 
     return () => subscription.unsubscribe();
   }, []);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
-    localStorage.removeItem("isDoctorLoggedIn");
-    localStorage.removeItem("isAdminLoggedIn");
     setIsLoggedIn(false);
-    setIsDoctorLoggedIn(false);
-    setIsAdminLoggedIn(false);
+    setUserRole(null);
     navigate("/");
   };
 
@@ -74,33 +81,11 @@ const Navbar = () => {
         <div className="hidden md:flex items-center gap-3">
           {isLoggedIn ? (
             <>
-              <Link to="/dashboard">
+              <Link to={userRole === 'doctor' ? '/doctor-dashboard' : userRole === 'admin' ? '/admin' : '/dashboard'}>
                 <Button variant="ghost" size="icon" className="rounded-full border-2 border-foreground">
-                  <span className="text-sm font-semibold">U</span>
-                </Button>
-              </Link>
-              <Button variant="outline" onClick={handleLogout}>
-                <LogOut className="h-4 w-4 mr-2" />
-                Logout
-              </Button>
-            </>
-          ) : isDoctorLoggedIn ? (
-            <>
-              <Link to="/doctor-dashboard">
-                <Button variant="ghost" size="icon" className="rounded-full border-2 border-foreground">
-                  <span className="text-sm font-semibold">D</span>
-                </Button>
-              </Link>
-              <Button variant="outline" onClick={handleLogout}>
-                <LogOut className="h-4 w-4 mr-2" />
-                Logout
-              </Button>
-            </>
-          ) : isAdminLoggedIn ? (
-            <>
-              <Link to="/admin">
-                <Button variant="ghost" size="icon" className="rounded-full border-2 border-foreground">
-                  <span className="text-sm font-semibold">A</span>
+                  <span className="text-sm font-semibold">
+                    {userRole === 'doctor' ? 'D' : userRole === 'admin' ? 'A' : 'U'}
+                  </span>
                 </Button>
               </Link>
               <Button variant="outline" onClick={handleLogout}>
@@ -144,33 +129,11 @@ const Navbar = () => {
               <div className="flex flex-col gap-2 mt-4">
                 {isLoggedIn ? (
                   <>
-                    <Link to="/dashboard">
+                    <Link to={userRole === 'doctor' ? '/doctor-dashboard' : userRole === 'admin' ? '/admin' : '/dashboard'}>
                       <Button variant="outline" size="icon" className="rounded-full mx-auto">
-                        <span className="text-sm font-semibold">U</span>
-                      </Button>
-                    </Link>
-                    <Button variant="outline" className="w-full" onClick={handleLogout}>
-                      <LogOut className="h-4 w-4 mr-2" />
-                      Logout
-                    </Button>
-                  </>
-                ) : isDoctorLoggedIn ? (
-                  <>
-                    <Link to="/doctor-dashboard">
-                      <Button variant="outline" size="icon" className="rounded-full mx-auto">
-                        <span className="text-sm font-semibold">D</span>
-                      </Button>
-                    </Link>
-                    <Button variant="outline" className="w-full" onClick={handleLogout}>
-                      <LogOut className="h-4 w-4 mr-2" />
-                      Logout
-                    </Button>
-                  </>
-                ) : isAdminLoggedIn ? (
-                  <>
-                    <Link to="/admin">
-                      <Button variant="outline" size="icon" className="rounded-full mx-auto">
-                        <span className="text-sm font-semibold">A</span>
+                        <span className="text-sm font-semibold">
+                          {userRole === 'doctor' ? 'D' : userRole === 'admin' ? 'A' : 'U'}
+                        </span>
                       </Button>
                     </Link>
                     <Button variant="outline" className="w-full" onClick={handleLogout}>
