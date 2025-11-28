@@ -22,8 +22,16 @@ const DoctorAuth = () => {
       // Check if user is logged in via Supabase
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
-        // Check if they're a user (not a doctor)
+        // Check user's role
         const { data: role } = await supabase.rpc('get_user_role', { _user_id: session.user.id });
+        
+        // If already logged in as doctor, redirect to dashboard
+        if (role === 'doctor') {
+          navigate("/doctor-dashboard");
+          return;
+        }
+        
+        // If logged in as user, show "already logged in" message
         if (role === 'user') {
           setOtherLogin("User");
           return;
@@ -37,7 +45,7 @@ const DoctorAuth = () => {
     };
     
     checkOtherLogins();
-  }, []);
+  }, [navigate]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -111,20 +119,29 @@ const DoctorAuth = () => {
       if (error) throw error;
 
       if (data.user) {
-        // Insert doctor role
-        await supabase.from('user_roles').insert({
-          user_id: data.user.id,
-          role: 'doctor',
+        // Use RPC function to assign doctor role (bypasses RLS)
+        const { error: roleError } = await supabase.rpc('assign_doctor_role', { 
+          user_id_param: data.user.id 
         });
+        
+        if (roleError) {
+          console.error('Role assignment error:', roleError);
+          throw new Error('Failed to assign doctor role. Please contact support.');
+        }
 
         // Create doctor profile
-        await supabase.from('doctor_profiles').insert({
+        const { error: profileError } = await supabase.from('doctor_profiles').insert({
           id: data.user.id,
           full_name: fullName,
           email: email,
           phone: phone,
           specialty: specialty,
         });
+        
+        if (profileError) {
+          console.error('Profile creation error:', profileError);
+          throw new Error('Failed to create doctor profile. Please try again.');
+        }
 
         // Set localStorage flag for backward compatibility
         localStorage.setItem("isDoctorLoggedIn", "true");
