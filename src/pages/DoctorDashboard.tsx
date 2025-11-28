@@ -10,10 +10,12 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Calendar, Users, FileText, TrendingUp, Clock, Phone, Mail, MapPin, Activity, BarChart3 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import type { Session } from "@supabase/supabase-js";
 
 const DoctorDashboard = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const [session, setSession] = useState<Session | null>(null);
   const [selectedAppointment, setSelectedAppointment] = useState<any>(null);
   const [showDetailsDialog, setShowDetailsDialog] = useState(false);
   const [showConsultationDialog, setShowConsultationDialog] = useState(false);
@@ -27,6 +29,9 @@ const DoctorDashboard = () => {
   const [selectedDay, setSelectedDay] = useState<string>('');
   const [selectedSlotIndex, setSelectedSlotIndex] = useState<number | null>(null);
   const [slotData, setSlotData] = useState({ time: '', status: 'Available' });
+  const [todayAppointments, setTodayAppointments] = useState<any[]>([]);
+  const [patients, setPatients] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -49,24 +54,54 @@ const DoctorDashboard = () => {
           variant: "destructive",
         });
         navigate("/doctor-auth");
+        return;
       }
+
+      setSession(session);
+      await fetchDoctorData(session.user.id);
     };
 
     checkAuth();
   }, [navigate, toast]);
 
-  const todayAppointments = [
-    { id: 1, patient: "Rahul Mehta", time: "10:00 AM", type: "In-Person", status: "Confirmed" },
-    { id: 2, patient: "Priya Singh", time: "11:30 AM", type: "Teleconsultation", status: "Confirmed" },
-    { id: 3, patient: "Amit Patel", time: "2:00 PM", type: "In-Person", status: "Pending" },
-  ];
+  const fetchDoctorData = async (doctorId: string) => {
+    try {
+      setLoading(true);
 
-  const [patients, setPatients] = useState([
-    { id: 1, name: "Rahul Mehta", age: 35, gender: "Male", lastVisit: "2024-01-15", phone: "+91 98765 43210", condition: "Diabetes" },
-    { id: 2, name: "Priya Singh", age: 28, gender: "Female", lastVisit: "2024-01-20", phone: "+91 98765 43211", condition: "Hypertension" },
-    { id: 3, name: "Amit Patel", age: 42, gender: "Male", lastVisit: "2024-01-10", phone: "+91 98765 43212", condition: "Asthma" },
-    { id: 4, name: "Sneha Gupta", age: 31, gender: "Female", lastVisit: "2024-01-18", phone: "+91 98765 43213", condition: "Migraine" },
-  ]);
+      // Fetch today's appointments
+      const today = new Date().toISOString().split('T')[0];
+      const { data: appointmentsData, error: appointmentsError } = await supabase
+        .from('appointments')
+        .select('*')
+        .eq('doctor_id', doctorId)
+        .eq('date', today)
+        .in('status', ['upcoming', 'confirmed']);
+
+      if (appointmentsError) throw appointmentsError;
+      setTodayAppointments(appointmentsData || []);
+
+      // Fetch patients
+      const { data: patientsData, error: patientsError } = await supabase
+        .from('doctor_patients')
+        .select('*')
+        .eq('doctor_id', doctorId)
+        .order('last_visit', { ascending: false });
+
+      if (patientsError) throw patientsError;
+      setPatients(patientsData || []);
+
+    } catch (error: any) {
+      console.error('Error fetching doctor data:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load dashboard data",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
 
   const [weeklySchedule, setWeeklySchedule] = useState([
     { day: "Monday", slots: [{ time: "9:00 AM - 12:00 PM", status: "Available" }, { time: "2:00 PM - 6:00 PM", status: "Available" }] },
@@ -170,44 +205,50 @@ const DoctorDashboard = () => {
                   <CardDescription>Manage your consultations for today</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  {todayAppointments.map((appointment) => (
-                    <div key={appointment.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 border border-border rounded-lg">
-                      <div className="space-y-1 mb-4 sm:mb-0">
-                        <h3 className="font-semibold">{appointment.patient}</h3>
-                        <div className="flex items-center gap-2 mt-2">
-                          <Badge variant="outline">{appointment.type}</Badge>
-                          <Badge variant="secondary">{appointment.status}</Badge>
+                  {loading ? (
+                    <p className="text-muted-foreground text-center py-8">Loading appointments...</p>
+                  ) : todayAppointments.length === 0 ? (
+                    <p className="text-muted-foreground text-center py-8">No appointments scheduled for today</p>
+                  ) : (
+                    todayAppointments.map((appointment) => (
+                      <div key={appointment.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 border border-border rounded-lg">
+                        <div className="space-y-1 mb-4 sm:mb-0">
+                          <h3 className="font-semibold">Patient</h3>
+                          <div className="flex items-center gap-2 mt-2">
+                            <Badge variant="outline">In-Person</Badge>
+                            <Badge variant="secondary">{appointment.status}</Badge>
+                          </div>
+                        </div>
+                        <div className="text-left sm:text-right space-y-2">
+                          <div className="flex items-center gap-2 sm:justify-end">
+                            <Clock className="h-4 w-4 text-muted-foreground" />
+                            <p className="font-medium">{appointment.time}</p>
+                          </div>
+                          <div className="flex gap-2 mt-2">
+                            <Button 
+                              size="sm"
+                              onClick={() => {
+                                setSelectedAppointment(appointment);
+                                setShowConsultationDialog(true);
+                              }}
+                            >
+                              Start Consultation
+                            </Button>
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => {
+                                setSelectedAppointment(appointment);
+                                setShowDetailsDialog(true);
+                              }}
+                            >
+                              View Details
+                            </Button>
+                          </div>
                         </div>
                       </div>
-                      <div className="text-left sm:text-right space-y-2">
-                        <div className="flex items-center gap-2 sm:justify-end">
-                          <Clock className="h-4 w-4 text-muted-foreground" />
-                          <p className="font-medium">{appointment.time}</p>
-                        </div>
-                        <div className="flex gap-2 mt-2">
-                          <Button 
-                            size="sm"
-                            onClick={() => {
-                              setSelectedAppointment(appointment);
-                              setShowConsultationDialog(true);
-                            }}
-                          >
-                            Start Consultation
-                          </Button>
-                          <Button 
-                            variant="outline" 
-                            size="sm"
-                            onClick={() => {
-                              setSelectedAppointment(appointment);
-                              setShowDetailsDialog(true);
-                            }}
-                          >
-                            View Details
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
+                    ))
+                  )}
                 </CardContent>
               </Card>
             </TabsContent>
@@ -219,35 +260,43 @@ const DoctorDashboard = () => {
                   <CardDescription>View and manage patient information</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  {patients.map((patient) => (
-                    <div key={patient.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 border border-border rounded-lg">
-                      <div className="space-y-2 mb-4 sm:mb-0">
-                        <h3 className="font-semibold text-lg">{patient.name}</h3>
-                        <div className="flex flex-wrap gap-2">
-                          <Badge variant="outline">{patient.age} years</Badge>
-                          <Badge variant="outline">{patient.gender}</Badge>
-                          <Badge variant="secondary">{patient.condition}</Badge>
+                  {loading ? (
+                    <p className="text-muted-foreground text-center py-8">Loading patients...</p>
+                  ) : patients.length === 0 ? (
+                    <p className="text-muted-foreground text-center py-8">No patient records found</p>
+                  ) : (
+                    patients.map((patient) => (
+                      <div key={patient.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 border border-border rounded-lg">
+                        <div className="space-y-2 mb-4 sm:mb-0">
+                          <h3 className="font-semibold text-lg">{patient.patient_name}</h3>
+                          <div className="flex flex-wrap gap-2">
+                            {patient.patient_age && <Badge variant="outline">{patient.patient_age} years</Badge>}
+                            {patient.patient_gender && <Badge variant="outline">{patient.patient_gender}</Badge>}
+                            {patient.patient_condition && <Badge variant="secondary">{patient.patient_condition}</Badge>}
+                          </div>
+                          {patient.patient_phone && (
+                            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                              <Phone className="h-3 w-3" />
+                              <span>{patient.patient_phone}</span>
+                            </div>
+                          )}
                         </div>
-                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                          <Phone className="h-3 w-3" />
-                          <span>{patient.phone}</span>
+                        <div className="text-left sm:text-right space-y-2">
+                          <p className="text-sm text-muted-foreground">Last Visit</p>
+                          <p className="font-medium">{patient.last_visit ? new Date(patient.last_visit).toLocaleDateString() : 'N/A'}</p>
+                          <Button 
+                            size="sm" 
+                            onClick={() => {
+                              setSelectedPatient(patient);
+                              setShowPatientProfileDialog(true);
+                            }}
+                          >
+                            View Profile
+                          </Button>
                         </div>
                       </div>
-                      <div className="text-left sm:text-right space-y-2">
-                        <p className="text-sm text-muted-foreground">Last Visit</p>
-                        <p className="font-medium">{patient.lastVisit}</p>
-                        <Button 
-                          size="sm" 
-                          onClick={() => {
-                            setSelectedPatient(patient);
-                            setShowPatientProfileDialog(true);
-                          }}
-                        >
-                          View Profile
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
+                    ))
+                  )}
                 </CardContent>
               </Card>
             </TabsContent>
@@ -358,16 +407,20 @@ const DoctorDashboard = () => {
           {selectedAppointment && (
             <div className="space-y-4">
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Patient Name</p>
-                <p className="text-base font-semibold">{selectedAppointment.patient}</p>
+                <p className="text-sm font-medium text-muted-foreground">Doctor</p>
+                <p className="text-base font-semibold">{selectedAppointment.doctor_name}</p>
+              </div>
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Clinic</p>
+                <p className="text-base font-semibold">{selectedAppointment.clinic_name}</p>
               </div>
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Appointment Time</p>
                 <p className="text-base font-semibold">{selectedAppointment.time}</p>
               </div>
               <div>
-                <p className="text-sm font-medium text-muted-foreground">Consultation Type</p>
-                <p className="text-base font-semibold">{selectedAppointment.type}</p>
+                <p className="text-sm font-medium text-muted-foreground">Date</p>
+                <p className="text-base font-semibold">{new Date(selectedAppointment.date).toLocaleDateString()}</p>
               </div>
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Status</p>
@@ -386,54 +439,58 @@ const DoctorDashboard = () => {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Start Consultation</DialogTitle>
-            <DialogDescription>Begin consultation with {selectedAppointment?.patient}</DialogDescription>
+            <DialogDescription>Begin consultation for this appointment</DialogDescription>
           </DialogHeader>
           {selectedAppointment && (
             <div className="space-y-4">
-              <p className="text-sm text-muted-foreground">
-                You are about to start a {selectedAppointment.type} consultation with {selectedAppointment.patient} scheduled for {selectedAppointment.time}.
-              </p>
-              <div className="p-4 bg-muted rounded-lg">
-                <p className="text-sm font-medium">Quick Actions:</p>
-                <ul className="text-sm text-muted-foreground mt-2 space-y-1">
-                  <li>• Review patient history</li>
-                  <li>• Prepare consultation notes</li>
-                  <li>• Have prescription pad ready</li>
-                </ul>
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Doctor</p>
+                <p className="text-base font-semibold">{selectedAppointment.doctor_name}</p>
+              </div>
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Clinic</p>
+                <p className="text-base font-semibold">{selectedAppointment.clinic_name}</p>
+              </div>
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Time</p>
+                <p className="text-base font-semibold">{selectedAppointment.time}</p>
+              </div>
+              <div className="space-y-2">
+                <p className="text-sm font-medium text-muted-foreground">Notes</p>
+                <textarea 
+                  className="w-full min-h-[100px] p-3 border border-border rounded-md"
+                  placeholder="Add consultation notes..."
+                />
               </div>
             </div>
           )}
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowConsultationDialog(false)}>Cancel</Button>
             <Button onClick={async () => {
-              // Mark consultation as completed in database
-              if (selectedAppointment?.id) {
-                try {
-                  const { error } = await supabase
-                    .from('appointments')
-                    .update({ status: 'completed' })
-                    .eq('id', selectedAppointment.id);
+              if (!selectedAppointment?.id || !session) return;
+              
+              try {
+                const { error } = await supabase
+                  .from('appointments')
+                  .update({ status: 'completed' })
+                  .eq('id', selectedAppointment.id)
+                  .eq('doctor_id', session.user.id);
 
-                  if (error) throw error;
+                if (error) throw error;
 
-                  toast({
-                    title: "Consultation Completed",
-                    description: `Consultation with ${selectedAppointment?.patient} has been marked as completed`,
-                  });
-                } catch (error: any) {
-                  toast({
-                    title: "Error",
-                    description: error.message || "Failed to update appointment status",
-                    variant: "destructive",
-                  });
-                }
-              } else {
                 toast({
-                  title: "Consultation Started",
-                  description: `Now consulting with ${selectedAppointment?.patient}`,
+                  title: "Consultation Completed",
+                  description: "Appointment marked as completed",
+                });
+                setShowConsultationDialog(false);
+                await fetchDoctorData(session.user.id);
+              } catch (error: any) {
+                toast({
+                  title: "Error",
+                  description: error.message || "Failed to update appointment",
+                  variant: "destructive",
                 });
               }
-              setShowConsultationDialog(false);
             }}>
               Complete Consultation
             </Button>
@@ -453,68 +510,63 @@ const DoctorDashboard = () => {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <p className="text-sm font-medium text-muted-foreground">Full Name</p>
-                  <p className="text-base font-semibold">{selectedPatient.name}</p>
+                  <p className="text-base font-semibold">{selectedPatient.patient_name}</p>
                 </div>
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">Age</p>
-                  <p className="text-base font-semibold">{selectedPatient.age} years</p>
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">Gender</p>
-                  <p className="text-base font-semibold">{selectedPatient.gender}</p>
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-muted-foreground">Contact</p>
-                  <div className="flex items-center gap-2">
-                    <Phone className="h-3 w-3 text-muted-foreground" />
-                    <p className="text-sm">{selectedPatient.phone}</p>
+                {selectedPatient.patient_age && (
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">Age</p>
+                    <p className="text-base font-semibold">{selectedPatient.patient_age} years</p>
                   </div>
-                </div>
+                )}
+                {selectedPatient.patient_gender && (
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">Gender</p>
+                    <p className="text-base font-semibold">{selectedPatient.patient_gender}</p>
+                  </div>
+                )}
+                {selectedPatient.patient_phone && (
+                  <div>
+                    <p className="text-sm font-medium text-muted-foreground">Contact</p>
+                    <div className="flex items-center gap-2">
+                      <Phone className="h-3 w-3 text-muted-foreground" />
+                      <p className="text-sm">{selectedPatient.patient_phone}</p>
+                    </div>
+                  </div>
+                )}
               </div>
 
-              <div className="border-t pt-4">
-                <p className="text-sm font-medium text-muted-foreground mb-2">Primary Condition</p>
-                <Badge variant="secondary" className="text-base">{selectedPatient.condition}</Badge>
-              </div>
+              {selectedPatient.patient_condition && (
+                <div className="border-t pt-4">
+                  <p className="text-sm font-medium text-muted-foreground mb-2">Primary Condition</p>
+                  <Badge variant="secondary" className="text-base">{selectedPatient.patient_condition}</Badge>
+                </div>
+              )}
+
+              {selectedPatient.notes && (
+                <div className="border-t pt-4">
+                  <p className="text-sm font-medium text-muted-foreground mb-2">Medical Notes</p>
+                  <p className="text-sm">{selectedPatient.notes}</p>
+                </div>
+              )}
 
               <div className="border-t pt-4">
-                <p className="text-sm font-medium text-muted-foreground mb-3">Medical History</p>
-                <div className="space-y-3">
-                  <div className="p-3 border border-border rounded-lg">
-                    <div className="flex items-center justify-between mb-1">
-                      <p className="font-medium">Last Visit</p>
-                      <p className="text-sm text-muted-foreground">{selectedPatient.lastVisit}</p>
-                    </div>
-                    <p className="text-sm text-muted-foreground">Routine checkup and medication review</p>
-                  </div>
-                  <div className="p-3 border border-border rounded-lg">
-                    <div className="flex items-center justify-between mb-1">
-                      <p className="font-medium">Medications</p>
-                      <Badge variant="outline">Active</Badge>
-                    </div>
-                    <ul className="text-sm text-muted-foreground space-y-1">
-                      <li>• Medication A - 500mg daily</li>
-                      <li>• Medication B - 10mg twice daily</li>
-                    </ul>
-                  </div>
-                  <div className="p-3 border border-border rounded-lg">
-                    <div className="flex items-center justify-between mb-1">
-                      <p className="font-medium">Allergies</p>
-                    </div>
-                    <p className="text-sm text-muted-foreground">Penicillin, Sulfa drugs</p>
-                  </div>
-                </div>
+                <p className="text-sm font-medium text-muted-foreground mb-2">Last Visit</p>
+                <p className="text-base">{selectedPatient.last_visit ? new Date(selectedPatient.last_visit).toLocaleDateString() : 'No previous visits'}</p>
               </div>
             </div>
           )}
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowPatientProfileDialog(false)}>Close</Button>
-            <Button onClick={() => {
-              setEditPatientData({ ...selectedPatient });
-              setShowEditPatientDialog(true);
+            <Button variant="outline" onClick={() => {
               setShowPatientProfileDialog(false);
             }}>
-              Edit Record
+              Close
+            </Button>
+            <Button onClick={() => {
+              setEditPatientData(selectedPatient);
+              setShowPatientProfileDialog(false);
+              setShowEditPatientDialog(true);
+            }}>
+              Edit Profile
             </Button>
           </DialogFooter>
         </DialogContent>
