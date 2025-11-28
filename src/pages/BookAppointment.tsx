@@ -93,6 +93,7 @@ const BookAppointment = () => {
         .from('appointments')
         .insert({
           user_id: session.user.id,
+          doctor_id: doctorId, // Link to doctor
           doctor_name: doctor.name,
           clinic_name: doctor.clinic.name,
           date: selectedDate!.toLocaleDateString('en-CA'), // YYYY-MM-DD format
