@@ -14,8 +14,6 @@ import { supabase } from "@/integrations/supabase/client";
 const DoctorDashboard = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [session, setSession] = useState<any>(null);
-  const [doctorProfile, setDoctorProfile] = useState<any>(null);
   const [selectedAppointment, setSelectedAppointment] = useState<any>(null);
   const [showDetailsDialog, setShowDetailsDialog] = useState(false);
   const [showConsultationDialog, setShowConsultationDialog] = useState(false);
@@ -29,97 +27,38 @@ const DoctorDashboard = () => {
   const [selectedDay, setSelectedDay] = useState<string>('');
   const [selectedSlotIndex, setSelectedSlotIndex] = useState<number | null>(null);
   const [slotData, setSlotData] = useState({ time: '', status: 'Available' });
-  
-  const [todayAppointments, setTodayAppointments] = useState<any[]>([]);
-  const [patients, setPatients] = useState<any[]>([]);
-  const [weeklySchedule, setWeeklySchedule] = useState<any[]>([]);
 
   useEffect(() => {
-    const checkAuth = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (!session) {
-        navigate("/doctor-auth");
-        return;
-      }
-
-      // Verify doctor role
-      const { data: role } = await supabase.rpc('get_user_role', { _user_id: session.user.id });
-      
-      if (role !== 'doctor') {
-        toast({
-          title: "Access Denied",
-          description: "You don't have permission to access this page",
-          variant: "destructive",
-        });
-        navigate("/");
-        return;
-      }
-
-      setSession(session);
-      fetchDoctorData(session.user.id);
-    };
-
-    checkAuth();
-
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (!session) {
-        navigate("/doctor-auth");
-      }
-    });
-
-    return () => subscription.unsubscribe();
+    // Check if doctor is logged in
+    if (localStorage.getItem("isDoctorLoggedIn") !== "true") {
+      navigate("/doctor-auth");
+    }
   }, [navigate]);
 
-  const fetchDoctorData = async (doctorId: string) => {
-    try {
-      // Fetch doctor profile
-      const { data: profile } = await supabase
-        .from('doctor_profiles')
-        .select('*')
-        .eq('id', doctorId)
-        .single();
-      
-      setDoctorProfile(profile);
+  const todayAppointments = [
+    { id: 1, patient: "Rahul Mehta", time: "10:00 AM", type: "In-Person", status: "Confirmed" },
+    { id: 2, patient: "Priya Singh", time: "11:30 AM", type: "Teleconsultation", status: "Confirmed" },
+    { id: 3, patient: "Amit Patel", time: "2:00 PM", type: "In-Person", status: "Pending" },
+  ];
 
-      // Fetch today's appointments
-      const today = new Date().toLocaleDateString('en-CA');
-      const { data: appointments } = await supabase
-        .from('appointments')
-        .select('*')
-        .eq('doctor_id', doctorId)
-        .eq('date', today);
-      
-      setTodayAppointments(appointments || []);
+  const [patients, setPatients] = useState([
+    { id: 1, name: "Rahul Mehta", age: 35, gender: "Male", lastVisit: "2024-01-15", phone: "+91 98765 43210", condition: "Diabetes" },
+    { id: 2, name: "Priya Singh", age: 28, gender: "Female", lastVisit: "2024-01-20", phone: "+91 98765 43211", condition: "Hypertension" },
+    { id: 3, name: "Amit Patel", age: 42, gender: "Male", lastVisit: "2024-01-10", phone: "+91 98765 43212", condition: "Asthma" },
+    { id: 4, name: "Sneha Gupta", age: 31, gender: "Female", lastVisit: "2024-01-18", phone: "+91 98765 43213", condition: "Migraine" },
+  ]);
 
-      // Fetch patients
-      const { data: patientsList } = await supabase
-        .from('doctor_patients')
-        .select('*')
-        .eq('doctor_id', doctorId);
-      
-      setPatients(patientsList || []);
-
-      // Fetch schedule
-      const { data: schedule } = await supabase
-        .from('doctor_schedules')
-        .select('*')
-        .eq('doctor_id', doctorId)
-        .order('day_of_week');
-      
-      setWeeklySchedule(schedule || []);
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: "Failed to fetch doctor data",
-        variant: "destructive",
-      });
-    }
-  };
+  const [weeklySchedule, setWeeklySchedule] = useState([
+    { day: "Monday", slots: [{ time: "9:00 AM - 12:00 PM", status: "Available" }, { time: "2:00 PM - 6:00 PM", status: "Available" }] },
+    { day: "Tuesday", slots: [{ time: "9:00 AM - 12:00 PM", status: "Available" }, { time: "2:00 PM - 6:00 PM", status: "Booked" }] },
+    { day: "Wednesday", slots: [{ time: "9:00 AM - 12:00 PM", status: "Available" }, { time: "2:00 PM - 6:00 PM", status: "Available" }] },
+    { day: "Thursday", slots: [{ time: "9:00 AM - 12:00 PM", status: "Booked" }, { time: "2:00 PM - 6:00 PM", status: "Available" }] },
+    { day: "Friday", slots: [{ time: "9:00 AM - 12:00 PM", status: "Available" }, { time: "2:00 PM - 6:00 PM", status: "Available" }] },
+    { day: "Saturday", slots: [{ time: "9:00 AM - 1:00 PM", status: "Available" }] },
+  ]);
 
   const analyticsData = [
-    { metric: "Total Consultations", value: patients.length.toString(), change: "+12%", icon: Users },
+    { metric: "Total Consultations", value: "234", change: "+12%", icon: Users },
     { metric: "Patient Satisfaction", value: "4.8/5", change: "+0.3", icon: TrendingUp },
     { metric: "Avg. Consultation Time", value: "25 min", change: "-5 min", icon: Clock },
     { metric: "Revenue This Month", value: "₹1.2L", change: "+18%", icon: BarChart3 },
@@ -133,7 +72,7 @@ const DoctorDashboard = () => {
         <div className="container mx-auto max-w-7xl">
           <div className="mb-8">
             <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-2">
-              Welcome, {doctorProfile?.full_name || 'Doctor'}!
+              Doctor Dashboard
             </h1>
             <p className="text-muted-foreground">
               Manage your appointments and patient records
@@ -163,7 +102,7 @@ const DoctorDashboard = () => {
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{patients.length}</div>
+                <div className="text-2xl font-bold">234</div>
                 <p className="text-xs text-muted-foreground">Total patients</p>
               </CardContent>
             </Card>
@@ -211,23 +150,20 @@ const DoctorDashboard = () => {
                   <CardDescription>Manage your consultations for today</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  {todayAppointments.length === 0 ? (
-                    <p className="text-center text-muted-foreground py-8">No appointments for today</p>
-                  ) : (
-                    todayAppointments.map((appointment) => (
-                      <div key={appointment.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 border border-border rounded-lg">
-                        <div className="space-y-1 mb-4 sm:mb-0">
-                          <h3 className="font-semibold">{appointment.doctor_name}</h3>
-                          <div className="flex items-center gap-2 mt-2">
-                            <Badge variant="outline">In-Person</Badge>
-                            <Badge variant="secondary">{appointment.status}</Badge>
-                          </div>
+                  {todayAppointments.map((appointment) => (
+                    <div key={appointment.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 border border-border rounded-lg">
+                      <div className="space-y-1 mb-4 sm:mb-0">
+                        <h3 className="font-semibold">{appointment.patient}</h3>
+                        <div className="flex items-center gap-2 mt-2">
+                          <Badge variant="outline">{appointment.type}</Badge>
+                          <Badge variant="secondary">{appointment.status}</Badge>
                         </div>
-                        <div className="text-left sm:text-right space-y-2">
-                          <div className="flex items-center gap-2 sm:justify-end">
-                            <Clock className="h-4 w-4 text-muted-foreground" />
-                            <p className="font-medium">{appointment.time}</p>
-                          </div>
+                      </div>
+                      <div className="text-left sm:text-right space-y-2">
+                        <div className="flex items-center gap-2 sm:justify-end">
+                          <Clock className="h-4 w-4 text-muted-foreground" />
+                          <p className="font-medium">{appointment.time}</p>
+                        </div>
                         <div className="flex gap-2 mt-2">
                           <Button 
                             size="sm"
@@ -251,8 +187,7 @@ const DoctorDashboard = () => {
                         </div>
                       </div>
                     </div>
-                    ))
-                  )}
+                  ))}
                 </CardContent>
               </Card>
             </TabsContent>
@@ -264,26 +199,23 @@ const DoctorDashboard = () => {
                   <CardDescription>View and manage patient information</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  {patients.length === 0 ? (
-                    <p className="text-center text-muted-foreground py-8">No patient records yet</p>
-                  ) : (
-                    patients.map((patient) => (
-                      <div key={patient.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 border border-border rounded-lg">
-                        <div className="space-y-2 mb-4 sm:mb-0">
-                          <h3 className="font-semibold text-lg">{patient.patient_name}</h3>
-                          <div className="flex flex-wrap gap-2">
-                            <Badge variant="outline">{patient.patient_age} years</Badge>
-                            <Badge variant="outline">{patient.patient_gender}</Badge>
-                            <Badge variant="secondary">{patient.patient_condition}</Badge>
-                          </div>
-                          <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                            <Phone className="h-3 w-3" />
-                            <span>{patient.patient_phone}</span>
-                          </div>
+                  {patients.map((patient) => (
+                    <div key={patient.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 border border-border rounded-lg">
+                      <div className="space-y-2 mb-4 sm:mb-0">
+                        <h3 className="font-semibold text-lg">{patient.name}</h3>
+                        <div className="flex flex-wrap gap-2">
+                          <Badge variant="outline">{patient.age} years</Badge>
+                          <Badge variant="outline">{patient.gender}</Badge>
+                          <Badge variant="secondary">{patient.condition}</Badge>
                         </div>
-                        <div className="text-left sm:text-right space-y-2">
-                          <p className="text-sm text-muted-foreground">Last Visit</p>
-                          <p className="font-medium">{patient.last_visit || 'N/A'}</p>
+                        <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                          <Phone className="h-3 w-3" />
+                          <span>{patient.phone}</span>
+                        </div>
+                      </div>
+                      <div className="text-left sm:text-right space-y-2">
+                        <p className="text-sm text-muted-foreground">Last Visit</p>
+                        <p className="font-medium">{patient.lastVisit}</p>
                         <Button 
                           size="sm" 
                           onClick={() => {
@@ -295,8 +227,7 @@ const DoctorDashboard = () => {
                         </Button>
                       </div>
                     </div>
-                    ))
-                  )}
+                  ))}
                 </CardContent>
               </Card>
             </TabsContent>
@@ -308,24 +239,29 @@ const DoctorDashboard = () => {
                   <CardDescription>Set your availability and working hours</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  {weeklySchedule.length === 0 ? (
-                    <p className="text-center text-muted-foreground py-8">No schedule set up yet</p>
-                  ) : (
-                    weeklySchedule.map((schedule) => (
-                      <div key={schedule.id} className="space-y-2">
-                        <h3 className="font-semibold text-lg">{schedule.day_of_week}</h3>
-                        <div className="p-4 border rounded-lg flex items-center justify-between border-primary/30 bg-primary/5">
-                          <div className="flex items-center gap-2">
-                            <Clock className="h-4 w-4 text-muted-foreground" />
-                            <span className="font-medium">{schedule.start_time} - {schedule.end_time}</span>
+                  {weeklySchedule.map((day) => (
+                    <div key={day.day} className="space-y-2">
+                      <h3 className="font-semibold text-lg">{day.day}</h3>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        {day.slots.map((slot, idx) => (
+                          <div 
+                            key={idx} 
+                            className={`p-4 border rounded-lg flex items-center justify-between ${
+                              slot.status === "Available" ? "border-primary/30 bg-primary/5" : "border-border bg-muted/50"
+                            }`}
+                          >
+                            <div className="flex items-center gap-2">
+                              <Clock className="h-4 w-4 text-muted-foreground" />
+                              <span className="font-medium">{slot.time}</span>
+                            </div>
+                            <Badge variant={slot.status === "Available" ? "default" : "secondary"}>
+                              {slot.status}
+                            </Badge>
                           </div>
-                          <Badge variant={schedule.is_available ? "default" : "secondary"}>
-                            {schedule.is_available ? "Available" : "Unavailable"}
-                          </Badge>
-                        </div>
+                        ))}
                       </div>
-                    ))
-                  )}
+                    </div>
+                  ))}
                   <Button 
                     className="w-full mt-4"
                     onClick={() => setShowEditScheduleDialog(true)}
