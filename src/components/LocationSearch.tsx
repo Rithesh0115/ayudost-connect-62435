@@ -12,14 +12,18 @@ import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 
-// Only Karnataka → Dakshina Kannada → Puttur
+// Karnataka districts with their taluks
 const locationData = {
   states: ["Karnataka"],
   districts: {
-    Karnataka: ["Dakshina Kannada"],
+    Karnataka: ["Dakshina Kannada", "Udupi", "Hassan", "Kodagu", "Chikkamagalur"],
   },
   taluks: {
-    "Dakshina Kannada": ["Puttur", "Bantwal", "Sullia", "Belthangady"],
+    "Dakshina Kannada": ["Puttur", "Mangaluru", "Bantwal", "Sullia", "Belthangady"],
+    "Udupi": ["Udupi", "Kundapura", "Karkala"],
+    "Hassan": ["Hassan", "Belur", "Sakleshpur", "Arkalgud"],
+    "Kodagu": ["Madikeri", "Somwarpet", "Virajpet"],
+    "Chikkamagalur": ["Chikkamagalur", "Koppa", "Mudigere", "Tarikere"],
   },
 };
 
