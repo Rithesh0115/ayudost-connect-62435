@@ -19,25 +19,46 @@ const DoctorAuth = () => {
 
   useEffect(() => {
     const checkOtherLogins = async () => {
-      // Check if user is logged in via Supabase
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        // Check if they're a user (not a doctor)
-        const { data: role } = await supabase.rpc('get_user_role', { _user_id: session.user.id });
-        if (role === 'user') {
-          setOtherLogin("User");
-          return;
-        }
-      }
+      // Skip if currently logging in
+      if (isLoading) return;
       
-      // Check if admin is logged in
-      if (localStorage.getItem("isAdminLoggedIn") === "true") {
-        setOtherLogin("Admin");
+      try {
+        // Check if user is logged in via Supabase
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session) {
+          // Check if they're a user (not a doctor) - with error handling
+          const { data: role, error } = await supabase.rpc('get_user_role', { 
+            _user_id: session.user.id 
+          });
+          
+          if (error) {
+            console.error('Error checking role:', error);
+            return;
+          }
+          
+          if (role === 'user') {
+            setOtherLogin("User");
+            return;
+          }
+          
+          // If they're already a doctor, redirect to dashboard
+          if (role === 'doctor') {
+            navigate("/doctor-dashboard");
+            return;
+          }
+        }
+        
+        // Check if admin is logged in
+        if (localStorage.getItem("isAdminLoggedIn") === "true") {
+          setOtherLogin("Admin");
+        }
+      } catch (err) {
+        console.error('Error in checkOtherLogins:', err);
       }
     };
     
     checkOtherLogins();
-  }, []);
+  }, [isLoading, navigate]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -55,12 +76,20 @@ const DoctorAuth = () => {
 
       if (error) throw error;
 
-      // Verify user has 'doctor' role
-      const { data: roleData } = await supabase.rpc('get_user_role', { _user_id: data.user.id });
+      // Verify user has 'doctor' role - WITH error handling
+      const { data: roleData, error: roleError } = await supabase.rpc('get_user_role', { 
+        _user_id: data.user.id 
+      });
       
-      if (roleData !== 'doctor') {
+      if (roleError) {
+        console.error('Role check error:', roleError);
         await supabase.auth.signOut();
-        throw new Error("This account is not registered as a doctor");
+        throw new Error("Unable to verify your account. Please try again.");
+      }
+      
+      if (!roleData || roleData !== 'doctor') {
+        await supabase.auth.signOut();
+        throw new Error("This account is not registered as a doctor. Please use the regular login.");
       }
 
       // Set localStorage flag for backward compatibility
