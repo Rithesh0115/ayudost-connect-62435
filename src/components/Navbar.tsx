@@ -24,23 +24,53 @@ const Navbar = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isDoctorLoggedIn, setIsDoctorLoggedIn] = useState(false);
   const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(false);
+  const [userRole, setUserRole] = useState<string | null>(null);
 
   useEffect(() => {
-    // Check Supabase auth session
+    // Check Supabase auth session and role
     const checkSession = async () => {
       const { data: { session } } = await supabase.auth.getSession();
-      setIsLoggedIn(!!session);
+      
+      if (session) {
+        const { data: role } = await supabase.rpc('get_user_role', { _user_id: session.user.id });
+        setUserRole(role);
+        
+        if (role === 'user') {
+          setIsLoggedIn(true);
+          setIsDoctorLoggedIn(false);
+        } else if (role === 'doctor') {
+          setIsLoggedIn(false);
+          setIsDoctorLoggedIn(true);
+        }
+      } else {
+        setIsLoggedIn(false);
+        setIsDoctorLoggedIn(false);
+      }
     };
     
     checkSession();
 
     // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setIsLoggedIn(!!session);
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      if (session) {
+        const { data: role } = await supabase.rpc('get_user_role', { _user_id: session.user.id });
+        setUserRole(role);
+        
+        if (role === 'user') {
+          setIsLoggedIn(true);
+          setIsDoctorLoggedIn(false);
+        } else if (role === 'doctor') {
+          setIsLoggedIn(false);
+          setIsDoctorLoggedIn(true);
+        }
+      } else {
+        setIsLoggedIn(false);
+        setIsDoctorLoggedIn(false);
+        setUserRole(null);
+      }
     });
 
-    // Keep localStorage checks for doctor/admin (for now)
-    setIsDoctorLoggedIn(localStorage.getItem("isDoctorLoggedIn") === "true");
+    // Keep localStorage check for admin (for now)
     setIsAdminLoggedIn(localStorage.getItem("isAdminLoggedIn") === "true");
 
     return () => subscription.unsubscribe();
@@ -53,6 +83,7 @@ const Navbar = () => {
     setIsLoggedIn(false);
     setIsDoctorLoggedIn(false);
     setIsAdminLoggedIn(false);
+    setUserRole(null);
     navigate("/");
   };
 

@@ -19,6 +19,7 @@ export type Database = {
           clinic_name: string
           created_at: string | null
           date: string
+          doctor_id: string | null
           doctor_name: string
           id: string
           status: string | null
@@ -30,6 +31,7 @@ export type Database = {
           clinic_name: string
           created_at?: string | null
           date: string
+          doctor_id?: string | null
           doctor_name: string
           id?: string
           status?: string | null
@@ -41,12 +43,142 @@ export type Database = {
           clinic_name?: string
           created_at?: string | null
           date?: string
+          doctor_id?: string | null
           doctor_name?: string
           id?: string
           status?: string | null
           time?: string
           updated_at?: string | null
           user_id?: string
+        }
+        Relationships: []
+      }
+      doctor_patients: {
+        Row: {
+          created_at: string | null
+          doctor_id: string
+          id: string
+          last_visit: string | null
+          notes: string | null
+          patient_age: number | null
+          patient_condition: string | null
+          patient_gender: string | null
+          patient_name: string
+          patient_phone: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          doctor_id: string
+          id?: string
+          last_visit?: string | null
+          notes?: string | null
+          patient_age?: number | null
+          patient_condition?: string | null
+          patient_gender?: string | null
+          patient_name: string
+          patient_phone?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          doctor_id?: string
+          id?: string
+          last_visit?: string | null
+          notes?: string | null
+          patient_age?: number | null
+          patient_condition?: string | null
+          patient_gender?: string | null
+          patient_name?: string
+          patient_phone?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      doctor_profiles: {
+        Row: {
+          avatar_url: string | null
+          bio: string | null
+          clinic_address: string | null
+          clinic_name: string | null
+          consultation_fee: number | null
+          created_at: string | null
+          email: string | null
+          experience_years: number | null
+          full_name: string | null
+          id: string
+          phone: string | null
+          qualifications: string | null
+          specialty: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          avatar_url?: string | null
+          bio?: string | null
+          clinic_address?: string | null
+          clinic_name?: string | null
+          consultation_fee?: number | null
+          created_at?: string | null
+          email?: string | null
+          experience_years?: number | null
+          full_name?: string | null
+          id: string
+          phone?: string | null
+          qualifications?: string | null
+          specialty?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          avatar_url?: string | null
+          bio?: string | null
+          clinic_address?: string | null
+          clinic_name?: string | null
+          consultation_fee?: number | null
+          created_at?: string | null
+          email?: string | null
+          experience_years?: number | null
+          full_name?: string | null
+          id?: string
+          phone?: string | null
+          qualifications?: string | null
+          specialty?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      doctor_schedules: {
+        Row: {
+          created_at: string | null
+          day_of_week: string
+          doctor_id: string
+          end_time: string
+          id: string
+          is_available: boolean | null
+          slots: number | null
+          start_time: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          day_of_week: string
+          doctor_id: string
+          end_time: string
+          id?: string
+          is_available?: boolean | null
+          slots?: number | null
+          start_time: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          day_of_week?: string
+          doctor_id?: string
+          end_time?: string
+          id?: string
+          is_available?: boolean | null
+          slots?: number | null
+          start_time?: string
+          updated_at?: string | null
         }
         Relationships: []
       }
