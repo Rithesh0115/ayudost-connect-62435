@@ -1,8 +1,9 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { Resend } from "npm:resend@4.0.0";
 
-const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
+// Note: Email sending disabled - install RESEND_API_KEY and uncomment to enable
+// import { Resend } from "npm:resend@2.0.0";
+// const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -54,24 +55,25 @@ serve(async (req) => {
         
         const message = `Time to take your medication: ${prescription.medication} - ${prescription.dosage}, ${prescription.frequency}`;
 
-        // Send email
+        // Send email (currently disabled - uncomment Resend import to enable)
         try {
-          await resend.emails.send({
-            from: "Ayudost <onboarding@resend.dev>",
-            to: [prescription.profiles.email],
-            subject: `Medication Reminder - ${prescription.medication}`,
-            html: `
-              <h2>Medication Reminder</h2>
-              <p>Hello ${prescription.profiles.full_name},</p>
-              <p>This is a reminder to take your medication:</p>
-              <p><strong>Medication:</strong> ${prescription.medication}</p>
-              <p><strong>Dosage:</strong> ${prescription.dosage}</p>
-              <p><strong>Frequency:</strong> ${prescription.frequency}</p>
-              ${prescription.doctor ? `<p><strong>Prescribed by:</strong> ${prescription.doctor}</p>` : ''}
-              <p>Stay healthy!</p>
-            `,
-          });
-          console.log(`Email sent successfully to ${prescription.profiles.email}`);
+          console.log(`Email would be sent to ${prescription.profiles.email}`);
+          // await resend.emails.send({
+          //   from: "Ayudost <onboarding@resend.dev>",
+          //   to: [prescription.profiles.email],
+          //   subject: `Medication Reminder - ${prescription.medication}`,
+          //   html: `
+          //     <h2>Medication Reminder</h2>
+          //     <p>Hello ${prescription.profiles.full_name},</p>
+          //     <p>This is a reminder to take your medication:</p>
+          //     <p><strong>Medication:</strong> ${prescription.medication}</p>
+          //     <p><strong>Dosage:</strong> ${prescription.dosage}</p>
+          //     <p><strong>Frequency:</strong> ${prescription.frequency}</p>
+          //     ${prescription.doctor ? `<p><strong>Prescribed by:</strong> ${prescription.doctor}</p>` : ''}
+          //     <p>Stay healthy!</p>
+          //   `,
+          // });
+          // console.log(`Email sent successfully to ${prescription.profiles.email}`);
         } catch (emailError) {
           console.error("Error sending email:", emailError);
         }
@@ -94,7 +96,8 @@ serve(async (req) => {
     });
   } catch (error) {
     console.error("Error in send-medication-reminder:", error);
-    return new Response(JSON.stringify({ error: error.message }), {
+    const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
+    return new Response(JSON.stringify({ error: errorMessage }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });

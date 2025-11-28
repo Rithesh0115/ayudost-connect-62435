@@ -1,8 +1,9 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { Resend } from "npm:resend@4.0.0";
 
-const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
+// Note: Email sending disabled - install RESEND_API_KEY and uncomment to enable
+// import { Resend } from "npm:resend@2.0.0";
+// const resend = new Resend(Deno.env.get("RESEND_API_KEY"));
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
@@ -71,24 +72,25 @@ serve(async (req) => {
             ? `Your appointment with ${appointment.doctor_name} at ${appointment.clinic_name} is in 1 hour!`
             : `Reminder: You have an appointment tomorrow with ${appointment.doctor_name} at ${appointment.clinic_name} at ${appointment.time}`;
 
-          // Send email
+          // Send email (currently disabled - uncomment Resend import to enable)
           try {
-            await resend.emails.send({
-              from: "Ayudost <onboarding@resend.dev>",
-              to: [appointment.profiles.email],
-              subject: `Appointment Reminder - ${appointment.doctor_name}`,
-              html: `
-                <h2>Appointment Reminder</h2>
-                <p>Hello ${appointment.profiles.full_name},</p>
-                <p>${message}</p>
-                <p><strong>Doctor:</strong> ${appointment.doctor_name}</p>
-                <p><strong>Clinic:</strong> ${appointment.clinic_name}</p>
-                <p><strong>Date:</strong> ${new Date(appointment.date).toLocaleDateString()}</p>
-                <p><strong>Time:</strong> ${appointment.time}</p>
-                <p>See you soon!</p>
-              `,
-            });
-            console.log(`Email sent successfully to ${appointment.profiles.email}`);
+            console.log(`Email would be sent to ${appointment.profiles.email}`);
+            // await resend.emails.send({
+            //   from: "Ayudost <onboarding@resend.dev>",
+            //   to: [appointment.profiles.email],
+            //   subject: `Appointment Reminder - ${appointment.doctor_name}`,
+            //   html: `
+            //     <h2>Appointment Reminder</h2>
+            //     <p>Hello ${appointment.profiles.full_name},</p>
+            //     <p>${message}</p>
+            //     <p><strong>Doctor:</strong> ${appointment.doctor_name}</p>
+            //     <p><strong>Clinic:</strong> ${appointment.clinic_name}</p>
+            //     <p><strong>Date:</strong> ${new Date(appointment.date).toLocaleDateString()}</p>
+            //     <p><strong>Time:</strong> ${appointment.time}</p>
+            //     <p>See you soon!</p>
+            //   `,
+            // });
+            // console.log(`Email sent successfully to ${appointment.profiles.email}`);
           } catch (emailError) {
             console.error("Error sending email:", emailError);
           }
@@ -112,7 +114,8 @@ serve(async (req) => {
     });
   } catch (error) {
     console.error("Error in send-appointment-reminder:", error);
-    return new Response(JSON.stringify({ error: error.message }), {
+    const errorMessage = error instanceof Error ? error.message : "Unknown error occurred";
+    return new Response(JSON.stringify({ error: errorMessage }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
