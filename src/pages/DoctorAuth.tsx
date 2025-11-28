@@ -111,17 +111,32 @@ const DoctorAuth = () => {
       if (error) throw error;
 
       if (data.user) {
+        // Wait for session to be established
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
         // Assign doctor role using SECURITY DEFINER function
-        await supabase.rpc('assign_doctor_role', { user_id_param: data.user.id });
+        const { error: roleError } = await supabase.rpc('assign_doctor_role', { 
+          user_id_param: data.user.id 
+        });
+        
+        if (roleError) {
+          console.error('Role assignment error:', roleError);
+          throw new Error('Failed to assign doctor role. Please try again.');
+        }
 
         // Create doctor profile
-        await supabase.from('doctor_profiles').insert({
+        const { error: profileError } = await supabase.from('doctor_profiles').insert({
           id: data.user.id,
           full_name: fullName,
           email: email,
           phone: phone,
           specialty: specialty,
         });
+
+        if (profileError) {
+          console.error('Profile creation error:', profileError);
+          throw new Error('Failed to create doctor profile. Please try again.');
+        }
 
         // Set localStorage flag for backward compatibility
         localStorage.setItem("isDoctorLoggedIn", "true");
