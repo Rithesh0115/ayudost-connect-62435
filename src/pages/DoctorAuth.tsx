@@ -129,14 +129,16 @@ const DoctorAuth = () => {
           throw new Error('Failed to assign doctor role. Please contact support.');
         }
 
-        // Create doctor profile
-        const { error: profileError } = await supabase.from('doctor_profiles').insert({
-          id: data.user.id,
-          full_name: fullName,
-          email: email,
-          phone: phone,
-          specialty: specialty,
-        });
+        // Create or update doctor profile (upsert handles case where trigger already created it)
+        const { error: profileError } = await supabase
+          .from('doctor_profiles')
+          .upsert({
+            id: data.user.id,
+            full_name: fullName,
+            email: email,
+            phone: phone,
+            specialty: specialty,
+          }, { onConflict: 'id' });
         
         if (profileError) {
           console.error('Profile creation error:', profileError);
