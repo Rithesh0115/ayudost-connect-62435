@@ -1,12 +1,21 @@
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Menu, LogOut } from "lucide-react";
+import { Menu, LogOut, User, Settings } from "lucide-react";
 import ayudostLogo from "@/assets/ayudost-logo.png";
 import {
   Sheet,
   SheetContent,
   SheetTrigger,
 } from "@/components/ui/sheet";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { NotificationBell } from "@/components/NotificationBell";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -73,42 +82,114 @@ const Navbar = () => {
           </div>
         )}
 
-        <div className="hidden md:flex items-center gap-3">
+        <div className="hidden md:flex items-center gap-4">
           {isLoggedIn ? (
             <>
-              <Link to="/dashboard">
-                <Button variant="ghost" size="icon" className="rounded-full border-2 border-foreground">
-                  <span className="text-sm font-semibold">U</span>
-                </Button>
-              </Link>
-              <Button variant="outline" onClick={handleLogout}>
-                <LogOut className="h-4 w-4 mr-2" />
-                Logout
-              </Button>
+              <NotificationBell />
+              <div className="flex flex-col items-start">
+                <span className="text-sm font-medium">User</span>
+                <span className="text-xs text-muted-foreground">authenticated</span>
+              </div>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" className="rounded-full">
+                    <Avatar className="h-9 w-9">
+                      <AvatarFallback className="bg-primary text-primary-foreground">U</AvatarFallback>
+                    </Avatar>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48">
+                  <DropdownMenuItem asChild>
+                    <Link to="/dashboard" className="cursor-pointer">
+                      <User className="h-4 w-4 mr-2" />
+                      View Profile
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/dashboard?edit=true" className="cursor-pointer">
+                      <Settings className="h-4 w-4 mr-2" />
+                      Edit Profile
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleLogout} className="cursor-pointer">
+                    <LogOut className="h-4 w-4 mr-2" />
+                    Logout
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </>
           ) : isDoctorLoggedIn ? (
             <>
-              <Link to="/doctor-dashboard">
-                <Button variant="ghost" size="icon" className="rounded-full border-2 border-foreground">
-                  <span className="text-sm font-semibold">D</span>
-                </Button>
-              </Link>
-              <Button variant="outline" onClick={handleLogout}>
-                <LogOut className="h-4 w-4 mr-2" />
-                Logout
-              </Button>
+              <NotificationBell />
+              <div className="flex flex-col items-start">
+                <span className="text-sm font-medium">Doctor</span>
+                <span className="text-xs text-muted-foreground">authenticated</span>
+              </div>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" className="rounded-full">
+                    <Avatar className="h-9 w-9">
+                      <AvatarFallback className="bg-green-600 text-white">D</AvatarFallback>
+                    </Avatar>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48">
+                  <DropdownMenuItem asChild>
+                    <Link to="/doctor-dashboard" className="cursor-pointer">
+                      <User className="h-4 w-4 mr-2" />
+                      View Profile
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/doctor-dashboard?edit=true" className="cursor-pointer">
+                      <Settings className="h-4 w-4 mr-2" />
+                      Edit Profile
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleLogout} className="cursor-pointer">
+                    <LogOut className="h-4 w-4 mr-2" />
+                    Logout
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </>
           ) : isAdminLoggedIn ? (
             <>
-              <Link to="/admin">
-                <Button variant="ghost" size="icon" className="rounded-full border-2 border-foreground">
-                  <span className="text-sm font-semibold">A</span>
-                </Button>
-              </Link>
-              <Button variant="outline" onClick={handleLogout}>
-                <LogOut className="h-4 w-4 mr-2" />
-                Logout
-              </Button>
+              <NotificationBell />
+              <div className="flex flex-col items-start">
+                <span className="text-sm font-medium">Admin</span>
+                <span className="text-xs text-muted-foreground">authenticated</span>
+              </div>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" className="rounded-full">
+                    <Avatar className="h-9 w-9">
+                      <AvatarFallback className="bg-primary text-primary-foreground">A</AvatarFallback>
+                    </Avatar>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48">
+                  <DropdownMenuItem asChild>
+                    <Link to="/admin" className="cursor-pointer">
+                      <User className="h-4 w-4 mr-2" />
+                      View Profile
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/admin?edit=true" className="cursor-pointer">
+                      <Settings className="h-4 w-4 mr-2" />
+                      Edit Profile
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleLogout} className="cursor-pointer">
+                    <LogOut className="h-4 w-4 mr-2" />
+                    Logout
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </>
           ) : (
             <>
@@ -147,39 +228,87 @@ const Navbar = () => {
                   </Link>
                 </>
               )}
-              <div className="flex flex-col gap-2 mt-4">
+              <div className="flex flex-col gap-3 mt-4">
                 {isLoggedIn ? (
                   <>
+                    <div className="flex items-center gap-3 pb-3 border-b">
+                      <Avatar className="h-12 w-12">
+                        <AvatarFallback className="bg-primary text-primary-foreground text-lg">U</AvatarFallback>
+                      </Avatar>
+                      <div className="flex flex-col">
+                        <span className="text-sm font-medium">User</span>
+                        <span className="text-xs text-muted-foreground">authenticated</span>
+                      </div>
+                    </div>
                     <Link to="/dashboard">
-                      <Button variant="outline" size="icon" className="rounded-full mx-auto">
-                        <span className="text-sm font-semibold">U</span>
+                      <Button variant="outline" className="w-full justify-start">
+                        <User className="h-4 w-4 mr-2" />
+                        View Profile
                       </Button>
                     </Link>
-                    <Button variant="outline" className="w-full" onClick={handleLogout}>
+                    <Link to="/dashboard?edit=true">
+                      <Button variant="outline" className="w-full justify-start">
+                        <Settings className="h-4 w-4 mr-2" />
+                        Edit Profile
+                      </Button>
+                    </Link>
+                    <Button variant="outline" className="w-full justify-start" onClick={handleLogout}>
                       <LogOut className="h-4 w-4 mr-2" />
                       Logout
                     </Button>
                   </>
                 ) : isDoctorLoggedIn ? (
                   <>
+                    <div className="flex items-center gap-3 pb-3 border-b">
+                      <Avatar className="h-12 w-12">
+                        <AvatarFallback className="bg-green-600 text-white text-lg">D</AvatarFallback>
+                      </Avatar>
+                      <div className="flex flex-col">
+                        <span className="text-sm font-medium">Doctor</span>
+                        <span className="text-xs text-muted-foreground">authenticated</span>
+                      </div>
+                    </div>
                     <Link to="/doctor-dashboard">
-                      <Button variant="outline" size="icon" className="rounded-full mx-auto">
-                        <span className="text-sm font-semibold">D</span>
+                      <Button variant="outline" className="w-full justify-start">
+                        <User className="h-4 w-4 mr-2" />
+                        View Profile
                       </Button>
                     </Link>
-                    <Button variant="outline" className="w-full" onClick={handleLogout}>
+                    <Link to="/doctor-dashboard?edit=true">
+                      <Button variant="outline" className="w-full justify-start">
+                        <Settings className="h-4 w-4 mr-2" />
+                        Edit Profile
+                      </Button>
+                    </Link>
+                    <Button variant="outline" className="w-full justify-start" onClick={handleLogout}>
                       <LogOut className="h-4 w-4 mr-2" />
                       Logout
                     </Button>
                   </>
                 ) : isAdminLoggedIn ? (
                   <>
+                    <div className="flex items-center gap-3 pb-3 border-b">
+                      <Avatar className="h-12 w-12">
+                        <AvatarFallback className="bg-primary text-primary-foreground text-lg">A</AvatarFallback>
+                      </Avatar>
+                      <div className="flex flex-col">
+                        <span className="text-sm font-medium">Admin</span>
+                        <span className="text-xs text-muted-foreground">authenticated</span>
+                      </div>
+                    </div>
                     <Link to="/admin">
-                      <Button variant="outline" size="icon" className="rounded-full mx-auto">
-                        <span className="text-sm font-semibold">A</span>
+                      <Button variant="outline" className="w-full justify-start">
+                        <User className="h-4 w-4 mr-2" />
+                        View Profile
                       </Button>
                     </Link>
-                    <Button variant="outline" className="w-full" onClick={handleLogout}>
+                    <Link to="/admin?edit=true">
+                      <Button variant="outline" className="w-full justify-start">
+                        <Settings className="h-4 w-4 mr-2" />
+                        Edit Profile
+                      </Button>
+                    </Link>
+                    <Button variant="outline" className="w-full justify-start" onClick={handleLogout}>
                       <LogOut className="h-4 w-4 mr-2" />
                       Logout
                     </Button>
