@@ -19,46 +19,25 @@ const DoctorAuth = () => {
 
   useEffect(() => {
     const checkOtherLogins = async () => {
-      // Skip if currently logging in
-      if (isLoading) return;
+      // Check if user is logged in via Supabase
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        // Check if they're a user (not a doctor)
+        const { data: role } = await supabase.rpc('get_user_role', { _user_id: session.user.id });
+        if (role === 'user') {
+          setOtherLogin("User");
+          return;
+        }
+      }
       
-      try {
-        // Check if user is logged in via Supabase
-        const { data: { session } } = await supabase.auth.getSession();
-        if (session) {
-          // Check if they're a user (not a doctor) - with error handling
-          const { data: role, error } = await supabase.rpc('get_user_role', { 
-            _user_id: session.user.id 
-          });
-          
-          if (error) {
-            console.error('Error checking role:', error);
-            return;
-          }
-          
-          if (role === 'user') {
-            setOtherLogin("User");
-            return;
-          }
-          
-          // If they're already a doctor, redirect to dashboard
-          if (role === 'doctor') {
-            navigate("/doctor-dashboard");
-            return;
-          }
-        }
-        
-        // Check if admin is logged in
-        if (localStorage.getItem("isAdminLoggedIn") === "true") {
-          setOtherLogin("Admin");
-        }
-      } catch (err) {
-        console.error('Error in checkOtherLogins:', err);
+      // Check if admin is logged in
+      if (localStorage.getItem("isAdminLoggedIn") === "true") {
+        setOtherLogin("Admin");
       }
     };
     
     checkOtherLogins();
-  }, [isLoading, navigate]);
+  }, []);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -76,20 +55,12 @@ const DoctorAuth = () => {
 
       if (error) throw error;
 
-      // Verify user has 'doctor' role - WITH error handling
-      const { data: roleData, error: roleError } = await supabase.rpc('get_user_role', { 
-        _user_id: data.user.id 
-      });
+      // Verify user has 'doctor' role
+      const { data: roleData } = await supabase.rpc('get_user_role', { _user_id: data.user.id });
       
-      if (roleError) {
-        console.error('Role check error:', roleError);
+      if (roleData !== 'doctor') {
         await supabase.auth.signOut();
-        throw new Error("Unable to verify your account. Please try again.");
-      }
-      
-      if (!roleData || roleData !== 'doctor') {
-        await supabase.auth.signOut();
-        throw new Error("This account is not registered as a doctor. Please use the regular login.");
+        throw new Error("This account is not registered as a doctor");
       }
 
       // Set localStorage flag for backward compatibility
@@ -140,32 +111,20 @@ const DoctorAuth = () => {
       if (error) throw error;
 
       if (data.user) {
-        // Wait for session to be established
-        await new Promise(resolve => setTimeout(resolve, 500));
-        
-        // Assign doctor role using SECURITY DEFINER function
-        const { error: roleError } = await supabase.rpc('assign_doctor_role', { 
-          user_id_param: data.user.id 
+        // Insert doctor role
+        await supabase.from('user_roles').insert({
+          user_id: data.user.id,
+          role: 'doctor',
         });
-        
-        if (roleError) {
-          console.error('Role assignment error:', roleError);
-          throw new Error('Failed to assign doctor role. Please try again.');
-        }
 
         // Create doctor profile
-        const { error: profileError } = await supabase.from('doctor_profiles').insert({
+        await supabase.from('doctor_profiles').insert({
           id: data.user.id,
           full_name: fullName,
           email: email,
           phone: phone,
           specialty: specialty,
         });
-
-        if (profileError) {
-          console.error('Profile creation error:', profileError);
-          throw new Error('Failed to create doctor profile. Please try again.');
-        }
 
         // Set localStorage flag for backward compatibility
         localStorage.setItem("isDoctorLoggedIn", "true");
