@@ -19,7 +19,7 @@ const locationData = {
     Karnataka: ["Dakshina Kannada"],
   },
   taluks: {
-    "Dakshina Kannada": ["Puttur"],
+    "Dakshina Kannada": ["Puttur", "Bantwal", "Sullia", "Belthangady"],
   },
 };
 
