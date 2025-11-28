@@ -56,20 +56,22 @@ const Navbar = () => {
         </Link>
 
         {/* Desktop Navigation */}
-        <div className="hidden md:flex items-center gap-6">
-          <Link to="/" className="text-sm font-medium text-foreground hover:text-primary transition-colors">
-            Home
-          </Link>
-          <Link to="/clinics" className="text-sm font-medium text-foreground hover:text-primary transition-colors">
-            Find Clinics
-          </Link>
-          <Link to="/about" className="text-sm font-medium text-foreground hover:text-primary transition-colors">
-            About
-          </Link>
-          <Link to="/contact" className="text-sm font-medium text-foreground hover:text-primary transition-colors">
-            Contact
-          </Link>
-        </div>
+        {!isDoctorLoggedIn && !isAdminLoggedIn && (
+          <div className="hidden md:flex items-center gap-6">
+            <Link to="/" className="text-sm font-medium text-foreground hover:text-primary transition-colors">
+              Home
+            </Link>
+            <Link to="/clinics" className="text-sm font-medium text-foreground hover:text-primary transition-colors">
+              Find Clinics
+            </Link>
+            <Link to="/about" className="text-sm font-medium text-foreground hover:text-primary transition-colors">
+              About
+            </Link>
+            <Link to="/contact" className="text-sm font-medium text-foreground hover:text-primary transition-colors">
+              Contact
+            </Link>
+          </div>
+        )}
 
         <div className="hidden md:flex items-center gap-3">
           {isLoggedIn ? (
@@ -129,18 +131,22 @@ const Navbar = () => {
           </SheetTrigger>
           <SheetContent side="right" className="w-[300px]">
             <div className="flex flex-col gap-4 mt-8">
-              <Link to="/" className="text-lg font-medium text-foreground hover:text-primary transition-colors">
-                Home
-              </Link>
-              <Link to="/clinics" className="text-lg font-medium text-foreground hover:text-primary transition-colors">
-                Find Clinics
-              </Link>
-              <Link to="/about" className="text-lg font-medium text-foreground hover:text-primary transition-colors">
-                About
-              </Link>
-              <Link to="/contact" className="text-lg font-medium text-foreground hover:text-primary transition-colors">
-                Contact
-              </Link>
+              {!isDoctorLoggedIn && !isAdminLoggedIn && (
+                <>
+                  <Link to="/" className="text-lg font-medium text-foreground hover:text-primary transition-colors">
+                    Home
+                  </Link>
+                  <Link to="/clinics" className="text-lg font-medium text-foreground hover:text-primary transition-colors">
+                    Find Clinics
+                  </Link>
+                  <Link to="/about" className="text-lg font-medium text-foreground hover:text-primary transition-colors">
+                    About
+                  </Link>
+                  <Link to="/contact" className="text-lg font-medium text-foreground hover:text-primary transition-colors">
+                    Contact
+                  </Link>
+                </>
+              )}
               <div className="flex flex-col gap-2 mt-4">
                 {isLoggedIn ? (
                   <>
