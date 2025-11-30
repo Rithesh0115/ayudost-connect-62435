@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { User, Mail, Phone, MapPin, Briefcase, Building, DollarSign, Award, Stethoscope, FileText } from "lucide-react";
+import { User, Mail, Phone, MapPin, Briefcase, Building, DollarSign, Award, Stethoscope, FileText, ArrowLeft } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import type { Session } from "@supabase/supabase-js";
@@ -103,6 +103,14 @@ const DoctorProfile = () => {
       <main className="flex-1 py-12 px-4 bg-muted/30">
         <div className="container mx-auto max-w-4xl">
           <div className="mb-8">
+            <Button
+              variant="ghost"
+              onClick={() => navigate("/doctor-dashboard")}
+              className="mb-4 -ml-2"
+            >
+              <ArrowLeft className="h-4 w-4 mr-2" />
+              Back to Dashboard
+            </Button>
             <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-2">
               Doctor Profile
             </h1>
