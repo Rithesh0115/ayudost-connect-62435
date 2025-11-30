@@ -1,4 +1,4 @@
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Menu, LogOut, User, Settings } from "lucide-react";
 import ayudostLogo from "@/assets/ayudost-logo.png";
@@ -21,6 +21,7 @@ import { supabase } from "@/integrations/supabase/client";
 
 const Navbar = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userRole, setUserRole] = useState<string | null>(null);
 
@@ -73,6 +74,7 @@ const Navbar = () => {
 
   const isDoctorLoggedIn = userRole === 'doctor';
   const isAdminLoggedIn = userRole === 'admin';
+  const isAuthPage = location.pathname === '/doctor-auth' || location.pathname === '/admin-auth';
 
   return (
     <nav className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -83,7 +85,7 @@ const Navbar = () => {
         </Link>
 
         {/* Desktop Navigation */}
-        {!isDoctorLoggedIn && !isAdminLoggedIn && (
+        {!isDoctorLoggedIn && !isAdminLoggedIn && !isAuthPage && (
           <div className="hidden md:flex items-center gap-6">
             <Link to="/" className="text-sm font-medium text-foreground hover:text-primary transition-colors">
               Home
@@ -218,7 +220,7 @@ const Navbar = () => {
           </SheetTrigger>
           <SheetContent side="right" className="w-[300px]">
             <div className="flex flex-col gap-4 mt-8">
-              {!isDoctorLoggedIn && !isAdminLoggedIn && (
+              {!isDoctorLoggedIn && !isAdminLoggedIn && !isAuthPage && (
                 <>
                   <Link to="/" className="text-lg font-medium text-foreground hover:text-primary transition-colors">
                     Home
