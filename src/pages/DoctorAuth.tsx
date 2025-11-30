@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
@@ -16,8 +16,33 @@ const DoctorAuth = () => {
   const { toast } = useToast();
   const [searchParams, setSearchParams] = useSearchParams();
   const [isLoading, setIsLoading] = useState(false);
+  const [existingRole, setExistingRole] = useState<string | null>(null);
 
   const currentTab = searchParams.get('mode') === 'signup' ? 'signup' : 'login';
+
+  // Check if user is already logged in with a different role
+  useEffect(() => {
+    const checkExistingSession = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (session?.user) {
+        const { data: roleData } = await supabase.rpc('get_user_role', {
+          _user_id: session.user.id
+        });
+        
+        if (roleData === 'user') {
+          setExistingRole('user');
+        } else if (roleData === 'admin') {
+          setExistingRole('admin');
+        } else if (roleData === 'doctor') {
+          // Already logged in as doctor, redirect to dashboard
+          navigate("/doctor-dashboard");
+        }
+      }
+    };
+    
+    checkExistingSession();
+  }, [navigate]);
   
   const handleTabChange = (value: string) => {
     setSearchParams({ mode: value });
@@ -185,10 +210,18 @@ const DoctorAuth = () => {
             </CardDescription>
           </CardHeader>
           <CardContent>
+            {existingRole && (
+              <div className="mb-4 p-4 bg-destructive/10 border border-destructive rounded-md">
+                <p className="text-sm text-destructive font-medium">
+                  You are currently logged in as a {existingRole === 'user' ? 'Patient' : 'Admin'}. 
+                  Please logout first to access the Doctor portal.
+                </p>
+              </div>
+            )}
             <Tabs value={currentTab} onValueChange={handleTabChange} className="w-full">
               <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="login">Login</TabsTrigger>
-                <TabsTrigger value="signup">Sign Up</TabsTrigger>
+                <TabsTrigger value="login" disabled={!!existingRole}>Login</TabsTrigger>
+                <TabsTrigger value="signup" disabled={!!existingRole}>Sign Up</TabsTrigger>
               </TabsList>
               
               <TabsContent value="login" className="animate-fade-in">
@@ -201,6 +234,7 @@ const DoctorAuth = () => {
                       type="email"
                       placeholder="Enter your email"
                       required
+                      disabled={!!existingRole}
                     />
                   </div>
                   <div className="space-y-2">
@@ -211,9 +245,10 @@ const DoctorAuth = () => {
                       type="password"
                       placeholder="Enter your password"
                       required
+                      disabled={!!existingRole}
                     />
                   </div>
-                  <Button type="submit" className="w-full" disabled={isLoading}>
+                  <Button type="submit" className="w-full" disabled={isLoading || !!existingRole}>
                     {isLoading ? "Logging in..." : "Login"}
                   </Button>
                   

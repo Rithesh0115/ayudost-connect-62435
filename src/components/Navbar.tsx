@@ -66,10 +66,14 @@ const Navbar = () => {
   }, []);
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
-    setIsLoggedIn(false);
-    setUserRole(null);
-    navigate("/");
+    try {
+      await supabase.auth.signOut();
+      setIsLoggedIn(false);
+      setUserRole(null);
+      navigate("/");
+    } catch (error) {
+      console.error('Logout error:', error);
+    }
   };
 
   const isDoctorLoggedIn = userRole === 'doctor';
