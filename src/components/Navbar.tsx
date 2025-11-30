@@ -75,6 +75,7 @@ const Navbar = () => {
   const isDoctorLoggedIn = userRole === 'doctor';
   const isAdminLoggedIn = userRole === 'admin';
   const isAuthPage = location.pathname === '/doctor-auth' || location.pathname === '/admin-auth';
+  const isAdminPage = location.pathname === '/admin';
 
   return (
     <nav className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -85,7 +86,7 @@ const Navbar = () => {
         </Link>
 
         {/* Desktop Navigation */}
-        {!isDoctorLoggedIn && !isAdminLoggedIn && !isAuthPage && (
+        {!isDoctorLoggedIn && !isAdminLoggedIn && !isAuthPage && !isAdminPage && (
           <div className="hidden md:flex items-center gap-6">
             <Link to="/" className="text-sm font-medium text-foreground hover:text-primary transition-colors">
               Home
@@ -199,7 +200,7 @@ const Navbar = () => {
                 </DropdownMenuContent>
               </DropdownMenu>
             </>
-          ) : !isAuthPage && (
+          ) : !isAuthPage && !isAdminPage && (
             <>
               <Link to={location.pathname === '/doctor-auth' ? '/doctor-auth' : '/auth'}>
                 <Button variant="ghost">Login</Button>
@@ -220,7 +221,7 @@ const Navbar = () => {
           </SheetTrigger>
           <SheetContent side="right" className="w-[300px]">
             <div className="flex flex-col gap-4 mt-8">
-              {!isDoctorLoggedIn && !isAdminLoggedIn && !isAuthPage && (
+              {!isDoctorLoggedIn && !isAdminLoggedIn && !isAuthPage && !isAdminPage && (
                 <>
                   <Link to="/" className="text-lg font-medium text-foreground hover:text-primary transition-colors">
                     Home
@@ -309,7 +310,7 @@ const Navbar = () => {
                       Logout
                     </Button>
                   </>
-                ) : !isAuthPage && (
+                ) : !isAuthPage && !isAdminPage && (
                   <>
                     <Link to={location.pathname === '/doctor-auth' ? '/doctor-auth' : '/auth'}>
                       <Button variant="outline" className="w-full">Login</Button>
