@@ -68,6 +68,17 @@ const DoctorAuth = () => {
     const email = formData.get("email") as string;
     const fullName = formData.get("fullName") as string;
     const password = formData.get("password") as string;
+    const confirmPassword = formData.get("confirmPassword") as string;
+
+    if (password !== confirmPassword) {
+      toast({
+        title: "Signup Failed",
+        description: "Passwords do not match",
+        variant: "destructive",
+      });
+      setIsLoading(false);
+      return;
+    }
 
     try {
       // Create Supabase Auth account
@@ -190,6 +201,17 @@ const DoctorAuth = () => {
                       name="password"
                       type="password"
                       placeholder="Create a password"
+                      required
+                      minLength={6}
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="signup-confirm-password">Confirm Password</Label>
+                    <Input
+                      id="signup-confirm-password"
+                      name="confirmPassword"
+                      type="password"
+                      placeholder="Confirm your password"
                       required
                       minLength={6}
                     />
