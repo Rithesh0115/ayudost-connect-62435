@@ -90,48 +90,11 @@ const AdminDashboard = () => {
     { id: 3, name: "Dr. Priya Sharma", specialty: "Pediatrician", email: "priya@clinic.com", status: "Pending", patients: 45 },
   ]);
 
-  const [clinics, setClinics] = useState<any[]>([]);
-  const [newClinicData, setNewClinicData] = useState({
-    name: '',
-    address: '',
-    state: 'Karnataka',
-    district: '',
-    taluk: '',
-    phone: '',
-    email: '',
-    timings: '',
-    services: [] as string[],
-  });
-
-  // Location data for hierarchical dropdowns
-  const locationData = {
-    states: ["Karnataka"],
-    districts: {
-      Karnataka: ["Dakshina Kannada", "Udupi", "Hassan", "Kodagu", "Chikkamagalur"],
-    },
-    taluks: {
-      "Dakshina Kannada": ["Puttur", "Mangaluru", "Bantwal", "Sullia", "Belthangady"],
-      "Udupi": ["Udupi", "Kundapura", "Karkala"],
-      "Hassan": ["Hassan", "Belur", "Sakleshpur", "Arkalgud"],
-      "Kodagu": ["Madikeri", "Somwarpet", "Virajpet"],
-      "Chikkamagalur": ["Chikkamagalur", "Koppa", "Mudigere", "Tarikere"],
-    },
-  };
-
-  // Fetch clinics from database
-  useEffect(() => {
-    const fetchClinics = async () => {
-      const { data, error } = await supabase
-        .from('clinics')
-        .select('*')
-        .order('created_at', { ascending: false });
-      
-      if (!error && data) {
-        setClinics(data);
-      }
-    };
-    fetchClinics();
-  }, []);
+  const [clinics, setClinics] = useState([
+    { id: 1, name: "Apollo Clinic", location: "Mumbai", doctors: 12, rating: 4.8, status: "Active" },
+    { id: 2, name: "Max Healthcare", location: "Delhi", doctors: 25, rating: 4.9, status: "Active" },
+    { id: 3, name: "Fortis Hospital", location: "Bangalore", doctors: 18, rating: 4.7, status: "Active" },
+  ]);
 
   const appointments = [
     { id: 1, patient: "Rahul Mehta", doctor: "Dr. Sarah Johnson", clinic: "Apollo Clinic", date: "2024-01-25", time: "10:00 AM", status: "Confirmed" },
@@ -154,51 +117,7 @@ const AdminDashboard = () => {
   };
 
   const handleAddClinic = () => {
-    setNewClinicData({
-      name: '',
-      address: '',
-      state: 'Karnataka',
-      district: '',
-      taluk: '',
-      phone: '',
-      email: '',
-      timings: '',
-      services: [],
-    });
     setShowAddClinicDialog(true);
-  };
-
-  const handleSaveClinic = async () => {
-    if (!newClinicData.name || !newClinicData.district || !newClinicData.taluk) {
-      toast({
-        title: "Missing Information",
-        description: "Please fill in all required fields",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    const { data, error } = await supabase
-      .from('clinics')
-      .insert([newClinicData])
-      .select()
-      .single();
-
-    if (error) {
-      toast({
-        title: "Error",
-        description: "Failed to add clinic",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setClinics([data, ...clinics]);
-    setShowAddClinicDialog(false);
-    toast({
-      title: "Clinic Added",
-      description: `${newClinicData.name} has been successfully added`,
-    });
   };
   return (
     <div className="min-h-screen flex flex-col">
@@ -438,23 +357,21 @@ const AdminDashboard = () => {
                   </div>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                   {clinics.map((clinic) => (
+                  {clinics.map((clinic) => (
                     <div key={clinic.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 border border-border rounded-lg">
                       <div className="space-y-2 mb-4 sm:mb-0">
                         <h3 className="font-semibold text-lg">{clinic.name}</h3>
                         <div className="flex items-center gap-2 text-sm text-muted-foreground">
                           <MapPin className="h-3 w-3" />
-                          <span>{clinic.district}, {clinic.taluk}</span>
+                          <span>{clinic.location}</span>
                         </div>
                         <div className="flex flex-wrap gap-2">
-                          <Badge variant="outline">{clinic.state}</Badge>
-                          {clinic.rating > 0 && <Badge variant="default">⭐ {clinic.rating}</Badge>}
+                          <Badge variant="outline">{clinic.doctors} doctors</Badge>
+                          <Badge variant="default">Rating: {clinic.rating}</Badge>
                         </div>
                       </div>
                       <div className="text-left sm:text-right space-y-2">
-                        <Badge variant={clinic.status === "active" ? "default" : "secondary"}>
-                          {clinic.status}
-                        </Badge>
+                        <Badge variant={clinic.status === "Active" ? "default" : "secondary"}>{clinic.status}</Badge>
                         <div className="flex gap-2">
                           <Button 
                             variant="outline" 
@@ -734,116 +651,42 @@ const AdminDashboard = () => {
 
       {/* Add Clinic Dialog */}
       <Dialog open={showAddClinicDialog} onOpenChange={setShowAddClinicDialog}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent>
           <DialogHeader>
             <DialogTitle>Add New Clinic</DialogTitle>
-            <DialogDescription>Register a new clinic with State → District → Taluk hierarchy</DialogDescription>
+            <DialogDescription>Register a new clinic to the platform</DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="clinic-name">Clinic Name *</Label>
-              <Input 
-                id="clinic-name" 
-                placeholder="Enter clinic name"
-                value={newClinicData.name}
-                onChange={(e) => setNewClinicData({ ...newClinicData, name: e.target.value })}
-              />
+              <Label htmlFor="clinic-name">Clinic Name</Label>
+              <Input id="clinic-name" placeholder="Enter clinic name" />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="clinic-address">Full Address *</Label>
-              <Input 
-                id="clinic-address" 
-                placeholder="Enter complete address"
-                value={newClinicData.address}
-                onChange={(e) => setNewClinicData({ ...newClinicData, address: e.target.value })}
-              />
+              <Label htmlFor="clinic-address">Address</Label>
+              <Input id="clinic-address" placeholder="Enter full address" />
             </div>
-            <div className="grid grid-cols-3 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="clinic-state">State *</Label>
-                <Select 
-                  value={newClinicData.state} 
-                  onValueChange={(value) => setNewClinicData({ ...newClinicData, state: value, district: '', taluk: '' })}
-                >
-                  <SelectTrigger id="clinic-state">
-                    <SelectValue placeholder="Select state" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {locationData.states.map((state) => (
-                      <SelectItem key={state} value={state}>{state}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="clinic-district">District *</Label>
-                <Select 
-                  value={newClinicData.district}
-                  onValueChange={(value) => setNewClinicData({ ...newClinicData, district: value, taluk: '' })}
-                  disabled={!newClinicData.state}
-                >
-                  <SelectTrigger id="clinic-district">
-                    <SelectValue placeholder="Select district" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {newClinicData.state &&
-                      locationData.districts[newClinicData.state as keyof typeof locationData.districts]?.map((district) => (
-                        <SelectItem key={district} value={district}>{district}</SelectItem>
-                      ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="clinic-taluk">Taluk *</Label>
-                <Select 
-                  value={newClinicData.taluk}
-                  onValueChange={(value) => setNewClinicData({ ...newClinicData, taluk: value })}
-                  disabled={!newClinicData.district}
-                >
-                  <SelectTrigger id="clinic-taluk">
-                    <SelectValue placeholder="Select taluk" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {newClinicData.district &&
-                      locationData.taluks[newClinicData.district as keyof typeof locationData.taluks]?.map((taluk) => (
-                        <SelectItem key={taluk} value={taluk}>{taluk}</SelectItem>
-                      ))}
-                  </SelectContent>
-                </Select>
-              </div>
+            <div className="space-y-2">
+              <Label htmlFor="clinic-city">City</Label>
+              <Input id="clinic-city" placeholder="Enter city" />
             </div>
             <div className="space-y-2">
               <Label htmlFor="clinic-phone">Phone Number</Label>
-              <Input 
-                id="clinic-phone" 
-                placeholder="+91 98765 43210"
-                value={newClinicData.phone}
-                onChange={(e) => setNewClinicData({ ...newClinicData, phone: e.target.value })}
-              />
+              <Input id="clinic-phone" placeholder="Enter phone number" />
             </div>
             <div className="space-y-2">
               <Label htmlFor="clinic-email">Email</Label>
-              <Input 
-                id="clinic-email" 
-                type="email" 
-                placeholder="clinic@example.com"
-                value={newClinicData.email}
-                onChange={(e) => setNewClinicData({ ...newClinicData, email: e.target.value })}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="clinic-timings">Operating Hours</Label>
-              <Input 
-                id="clinic-timings" 
-                placeholder="9:00 AM - 8:00 PM"
-                value={newClinicData.timings}
-                onChange={(e) => setNewClinicData({ ...newClinicData, timings: e.target.value })}
-              />
+              <Input id="clinic-email" type="email" placeholder="clinic@example.com" />
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowAddClinicDialog(false)}>Cancel</Button>
-            <Button onClick={handleSaveClinic}>
+            <Button onClick={() => {
+              setShowAddClinicDialog(false);
+              toast({
+                title: "Clinic Added",
+                description: "New clinic has been successfully registered",
+              });
+            }}>
               Add Clinic
             </Button>
           </DialogFooter>
@@ -1099,7 +942,7 @@ const AdminDashboard = () => {
 
       {/* Edit Clinic Dialog */}
       <Dialog open={showEditClinicDialog} onOpenChange={setShowEditClinicDialog}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent>
           <DialogHeader>
             <DialogTitle>Edit Clinic</DialogTitle>
             <DialogDescription>Update clinic information</DialogDescription>
@@ -1114,24 +957,21 @@ const AdminDashboard = () => {
                 />
               </div>
               <div className="space-y-2">
-                <Label>Address</Label>
+                <Label>Location</Label>
                 <Input
-                  value={editClinicData.address}
-                  onChange={(e) => setEditClinicData({ ...editClinicData, address: e.target.value })}
+                  value={editClinicData.location}
+                  onChange={(e) => setEditClinicData({ ...editClinicData, location: e.target.value })}
                 />
               </div>
               <div className="space-y-2">
-                <Label>Phone</Label>
+                <Label>Rating</Label>
                 <Input
-                  value={editClinicData.phone || ''}
-                  onChange={(e) => setEditClinicData({ ...editClinicData, phone: e.target.value })}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Timings</Label>
-                <Input
-                  value={editClinicData.timings || ''}
-                  onChange={(e) => setEditClinicData({ ...editClinicData, timings: e.target.value })}
+                  type="number"
+                  step="0.1"
+                  max="5"
+                  min="0"
+                  value={editClinicData.rating}
+                  onChange={(e) => setEditClinicData({ ...editClinicData, rating: parseFloat(e.target.value) })}
                 />
               </div>
               <div className="space-y-2">
@@ -1141,8 +981,8 @@ const AdminDashboard = () => {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="active">Active</SelectItem>
-                    <SelectItem value="inactive">Inactive</SelectItem>
+                    <SelectItem value="Active">Active</SelectItem>
+                    <SelectItem value="Inactive">Inactive</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -1150,21 +990,7 @@ const AdminDashboard = () => {
           )}
           <DialogFooter>
             <Button variant="outline" onClick={() => setShowEditClinicDialog(false)}>Cancel</Button>
-            <Button onClick={async () => {
-              const { error } = await supabase
-                .from('clinics')
-                .update(editClinicData)
-                .eq('id', editClinicData.id);
-
-              if (error) {
-                toast({
-                  title: "Error",
-                  description: "Failed to update clinic",
-                  variant: "destructive",
-                });
-                return;
-              }
-
+            <Button onClick={() => {
               const updatedClinics = clinics.map(c => c.id === editClinicData.id ? editClinicData : c);
               setClinics(updatedClinics);
               setShowEditClinicDialog(false);
