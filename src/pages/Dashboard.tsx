@@ -64,14 +64,22 @@ const Dashboard = () => {
     return () => subscription.unsubscribe();
   }, [navigate]);
 
-  // Check for edit query parameter and enable profile edit mode
+  // Check for query parameters (edit mode and tab selection)
   useEffect(() => {
     const editParam = searchParams.get('edit');
+    const tabParam = searchParams.get('tab');
+    
     if (editParam === 'true') {
       setActiveTab("profile");
       setIsEditingProfile(true);
-      // Remove the query parameter after reading it
+    } else if (tabParam === 'profile') {
+      setActiveTab("profile");
+    }
+    
+    // Clean up query parameters after reading them
+    if (editParam || tabParam) {
       searchParams.delete('edit');
+      searchParams.delete('tab');
       setSearchParams(searchParams, { replace: true });
     }
   }, [searchParams, setSearchParams]);
@@ -595,7 +603,6 @@ const Dashboard = () => {
               <TabsTrigger value="appointments">My Appointments</TabsTrigger>
               <TabsTrigger value="records">Medical Records</TabsTrigger>
               <TabsTrigger value="prescriptions">Prescriptions</TabsTrigger>
-              <TabsTrigger value="profile">Profile</TabsTrigger>
             </TabsList>
 
             <TabsContent value="appointments" className="space-y-4">
