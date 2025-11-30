@@ -122,6 +122,33 @@ const DoctorDashboard = () => {
     { day: "Friday", slots: [{ time: "9:00 AM - 12:00 PM", status: "Available" }, { time: "2:00 PM - 6:00 PM", status: "Available" }] },
     { day: "Saturday", slots: [{ time: "9:00 AM - 1:00 PM", status: "Available" }] },
   ]);
+  const [myClinic, setMyClinic] = useState<any>(null);
+
+  useEffect(() => {
+    const fetchMyClinic = async () => {
+      if (!session?.user.id) return;
+      
+      const { data: clinicLink } = await supabase
+        .from('clinic_doctors')
+        .select('clinic_id, is_primary')
+        .eq('doctor_id', session.user.id)
+        .single();
+
+      if (clinicLink) {
+        const { data: clinicData } = await supabase
+          .from('clinics')
+          .select('*')
+          .eq('id', clinicLink.clinic_id)
+          .single();
+
+        if (clinicData) {
+          setMyClinic({ ...clinicData, isPrimary: clinicLink.is_primary });
+        }
+      }
+    };
+
+    fetchMyClinic();
+  }, [session]);
 
   const analyticsData = [
     { metric: "Total Consultations", value: "234", change: "+12%", icon: Users },
@@ -205,6 +232,7 @@ const DoctorDashboard = () => {
             <TabsList>
               <TabsTrigger value="appointments">Appointments</TabsTrigger>
               <TabsTrigger value="patients">Patients</TabsTrigger>
+              <TabsTrigger value="clinic">My Clinic</TabsTrigger>
               <TabsTrigger value="schedule">Schedule</TabsTrigger>
               <TabsTrigger value="analytics">Analytics</TabsTrigger>
             </TabsList>
@@ -307,6 +335,98 @@ const DoctorDashboard = () => {
                         </div>
                       </div>
                     ))
+                  )}
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            <TabsContent value="clinic">
+              <Card>
+                <CardHeader>
+                  <CardTitle>My Clinic</CardTitle>
+                  <CardDescription>View your assigned clinic information</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {myClinic ? (
+                    <div className="space-y-6">
+                      <div className="flex items-start justify-between">
+                        <div className="space-y-4 flex-1">
+                          <div>
+                            <h3 className="text-2xl font-bold mb-2">{myClinic.name}</h3>
+                            {myClinic.isPrimary && (
+                              <Badge variant="default" className="mb-3">Primary Clinic</Badge>
+                            )}
+                          </div>
+                          
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="space-y-2">
+                              <div className="flex items-center gap-2 text-sm">
+                                <MapPin className="h-4 w-4 text-muted-foreground" />
+                                <div>
+                                  <p className="font-medium">Location</p>
+                                  <p className="text-muted-foreground">{myClinic.address}</p>
+                                  <p className="text-muted-foreground">{myClinic.taluk}, {myClinic.district}</p>
+                                  <p className="text-muted-foreground">{myClinic.state}</p>
+                                </div>
+                              </div>
+                            </div>
+
+                            {myClinic.timings && (
+                              <div className="space-y-2">
+                                <div className="flex items-center gap-2 text-sm">
+                                  <Clock className="h-4 w-4 text-muted-foreground" />
+                                  <div>
+                                    <p className="font-medium">Operating Hours</p>
+                                    <p className="text-muted-foreground">{myClinic.timings}</p>
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+
+                            {myClinic.phone && (
+                              <div className="space-y-2">
+                                <div className="flex items-center gap-2 text-sm">
+                                  <Phone className="h-4 w-4 text-muted-foreground" />
+                                  <div>
+                                    <p className="font-medium">Contact</p>
+                                    <p className="text-muted-foreground">{myClinic.phone}</p>
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+
+                            {myClinic.email && (
+                              <div className="space-y-2">
+                                <div className="flex items-center gap-2 text-sm">
+                                  <Mail className="h-4 w-4 text-muted-foreground" />
+                                  <div>
+                                    <p className="font-medium">Email</p>
+                                    <p className="text-muted-foreground">{myClinic.email}</p>
+                                  </div>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+
+                          {myClinic.services && myClinic.services.length > 0 && (
+                            <div className="space-y-2">
+                              <p className="font-medium text-sm">Services Offered</p>
+                              <div className="flex flex-wrap gap-2">
+                                {myClinic.services.map((service: string, idx: number) => (
+                                  <Badge key={idx} variant="secondary">{service}</Badge>
+                                ))}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="text-center py-12">
+                      <Building className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                      <p className="text-muted-foreground mb-2">You haven't been assigned to a clinic yet</p>
+                      <p className="text-sm text-muted-foreground">Please contact the admin to assign you to a clinic</p>
+                    </div>
                   )}
                 </CardContent>
               </Card>
