@@ -175,7 +175,7 @@ const Navbar = () => {
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="icon" className="rounded-full">
                     <Avatar className="h-9 w-9">
-                      <AvatarFallback className="bg-primary text-primary-foreground">U</AvatarFallback>
+                      <AvatarFallback className="bg-primary text-primary-foreground">P</AvatarFallback>
                     </Avatar>
                   </Button>
                 </DropdownMenuTrigger>
@@ -202,10 +202,10 @@ const Navbar = () => {
             </>
           ) : !isAuthPage && !isAdminPage && (
             <>
-              <Link to={location.pathname === '/doctor-auth' ? '/doctor-auth' : '/auth'}>
+              <Link to={location.pathname === '/doctor-auth' ? '/doctor-auth' : '/patient-auth'}>
                 <Button variant="ghost">Login</Button>
               </Link>
-              <Link to={location.pathname === '/doctor-auth' ? '/doctor-auth?mode=signup' : '/auth?mode=signup'}>
+              <Link to={location.pathname === '/doctor-auth' ? '/doctor-auth?mode=signup' : '/patient-auth?mode=signup'}>
                 <Button>Sign Up</Button>
               </Link>
             </>
@@ -290,7 +290,7 @@ const Navbar = () => {
                   <>
                     <div className="flex items-center gap-3 pb-3 border-b">
                       <Avatar className="h-12 w-12">
-                        <AvatarFallback className="bg-primary text-primary-foreground text-lg">U</AvatarFallback>
+                        <AvatarFallback className="bg-primary text-primary-foreground text-lg">P</AvatarFallback>
                       </Avatar>
                     </div>
                     <Link to="/profile">
@@ -312,10 +312,10 @@ const Navbar = () => {
                   </>
                 ) : !isAuthPage && !isAdminPage && (
                   <>
-                    <Link to={location.pathname === '/doctor-auth' ? '/doctor-auth' : '/auth'}>
+                    <Link to={location.pathname === '/doctor-auth' ? '/doctor-auth' : '/patient-auth'}>
                       <Button variant="outline" className="w-full">Login</Button>
                     </Link>
-                    <Link to={location.pathname === '/doctor-auth' ? '/doctor-auth?mode=signup' : '/auth?mode=signup'}>
+                    <Link to={location.pathname === '/doctor-auth' ? '/doctor-auth?mode=signup' : '/patient-auth?mode=signup'}>
                       <Button className="w-full">Sign Up</Button>
                     </Link>
                   </>

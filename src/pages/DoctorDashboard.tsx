@@ -72,7 +72,7 @@ const DoctorDashboard = () => {
       // Fetch today's appointments
       const today = new Date().toISOString().split('T')[0];
       const { data: appointmentsData, error: appointmentsError } = await supabase
-        .from('appointments')
+        .from('patient_appointments')
         .select('*')
         .eq('doctor_id', doctorId)
         .eq('date', today)
@@ -482,7 +482,7 @@ const DoctorDashboard = () => {
               
               try {
                 const { error } = await supabase
-                  .from('appointments')
+                  .from('patient_appointments')
                   .update({ status: 'completed' })
                   .eq('id', selectedAppointment.id)
                   .eq('doctor_id', session.user.id);

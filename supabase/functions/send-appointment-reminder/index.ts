@@ -30,8 +30,8 @@ serve(async (req) => {
 
     // Get appointments for tomorrow or in 1 hour
     const { data: appointments, error: appointmentsError } = await supabaseClient
-      .from("appointments")
-      .select("*, profiles!inner(email, full_name)")
+      .from("patient_appointments")
+      .select("*, patient_profiles!inner(email, full_name)")
       .in("status", ["upcoming", "confirmed"])
       .gte("date", now.toISOString().split('T')[0])
       .lte("date", tomorrow.toISOString().split('T')[0]);
@@ -74,14 +74,14 @@ serve(async (req) => {
 
           // Send email (currently disabled - uncomment Resend import to enable)
           try {
-            console.log(`Email would be sent to ${appointment.profiles.email}`);
+            console.log(`Email would be sent to ${appointment.patient_profiles.email}`);
             // await resend.emails.send({
             //   from: "Ayudost <onboarding@resend.dev>",
-            //   to: [appointment.profiles.email],
+            //   to: [appointment.patient_profiles.email],
             //   subject: `Appointment Reminder - ${appointment.doctor_name}`,
             //   html: `
             //     <h2>Appointment Reminder</h2>
-            //     <p>Hello ${appointment.profiles.full_name},</p>
+            //     <p>Hello ${appointment.patient_profiles.full_name},</p>
             //     <p>${message}</p>
             //     <p><strong>Doctor:</strong> ${appointment.doctor_name}</p>
             //     <p><strong>Clinic:</strong> ${appointment.clinic_name}</p>
@@ -90,7 +90,7 @@ serve(async (req) => {
             //     <p>See you soon!</p>
             //   `,
             // });
-            // console.log(`Email sent successfully to ${appointment.profiles.email}`);
+            // console.log(`Email sent successfully to ${appointment.patient_profiles.email}`);
           } catch (emailError) {
             console.error("Error sending email:", emailError);
           }

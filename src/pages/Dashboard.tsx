@@ -53,7 +53,7 @@ const Dashboard = () => {
     checkUser();
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (!session) {
-        navigate("/auth");
+        navigate("/patient-auth");
       } else {
         setUser(session.user);
         loadUserData(session.user.id);
@@ -77,7 +77,7 @@ const Dashboard = () => {
   const checkUser = async () => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) {
-      navigate("/auth");
+      navigate("/patient-auth");
       return;
     }
     setUser(session.user);
@@ -89,7 +89,7 @@ const Dashboard = () => {
     try {
       // Load profile
       const { data: profileData } = await supabase
-        .from('profiles')
+        .from('patient_profiles')
         .select('*')
         .eq('id', userId)
         .single();
@@ -107,7 +107,7 @@ const Dashboard = () => {
 
       // Load appointments
       const { data: appointmentsData } = await supabase
-        .from('appointments')
+        .from('patient_appointments')
         .select('*')
         .eq('user_id', userId)
         .order('date', { ascending: true });
@@ -118,7 +118,7 @@ const Dashboard = () => {
 
       // Load prescriptions
       const { data: prescriptionsData } = await supabase
-        .from('prescriptions')
+        .from('patient_prescriptions')
         .select('*')
         .eq('user_id', userId)
         .order('created_at', { ascending: false });
@@ -129,7 +129,7 @@ const Dashboard = () => {
 
       // Load medical records from database
       const { data: recordsData } = await supabase
-        .from('medical_records')
+        .from('patient_medical_records')
         .select('*')
         .eq('user_id', userId)
         .order('date', { ascending: false });
@@ -169,7 +169,7 @@ const Dashboard = () => {
 
     try {
       const { error } = await supabase
-        .from('appointments')
+        .from('patient_appointments')
         .update({ date: newDate, time: newTime })
         .eq('id', selectedAppointment.id);
 
@@ -196,7 +196,7 @@ const Dashboard = () => {
   const handleCancel = async (appointmentId: string) => {
     try {
       const { error } = await supabase
-        .from('appointments')
+        .from('patient_appointments')
         .delete()
         .eq('id', appointmentId);
 
@@ -251,7 +251,7 @@ const Dashboard = () => {
 
       // Insert record into database
       const { error } = await supabase
-        .from('medical_records')
+        .from('patient_medical_records')
         .insert({
           user_id: user.id,
           title: newRecord.title,
@@ -295,7 +295,7 @@ const Dashboard = () => {
 
     try {
       const { error } = await supabase
-        .from('prescriptions')
+        .from('patient_prescriptions')
         .insert({
           user_id: user.id,
           medication: newPrescription.medicine,
@@ -388,7 +388,7 @@ const Dashboard = () => {
       }
 
       const { error } = await supabase
-        .from('medical_records')
+        .from('patient_medical_records')
         .update({
           title: newRecord.title,
           type: newRecord.type,
@@ -450,7 +450,7 @@ const Dashboard = () => {
 
     try {
       const { error } = await supabase
-        .from('prescriptions')
+        .from('patient_prescriptions')
         .update({
           medication: newPrescription.medicine,
           dosage: newPrescription.dosage,
@@ -492,7 +492,7 @@ const Dashboard = () => {
         <div className="container mx-auto max-w-7xl">
           <div className="mb-8">
             <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-2">
-              Welcome back, {profile.full_name?.split(' ')[0] || 'User'}!
+              Patient Dashboard - Welcome back, {profile.full_name?.split(' ')[0] || 'Patient'}!
             </h1>
             <p className="text-muted-foreground">
               Manage your appointments and health records
