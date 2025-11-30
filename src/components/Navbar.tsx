@@ -201,7 +201,7 @@ const Navbar = () => {
             </>
           ) : (
             <>
-              <Link to="/auth?mode=login">
+              <Link to="/auth">
                 <Button variant="ghost">Login</Button>
               </Link>
               <Link to="/auth?mode=signup">
@@ -310,14 +310,14 @@ const Navbar = () => {
                     </Button>
                   </>
                 ) : (
-                <>
-                  <Link to="/auth?mode=login">
-                    <Button variant="outline" className="w-full">Login</Button>
-                  </Link>
-                  <Link to="/auth?mode=signup">
-                    <Button className="w-full">Sign Up</Button>
-                  </Link>
-                </>
+                  <>
+                    <Link to="/auth">
+                      <Button variant="outline" className="w-full">Login</Button>
+                    </Link>
+                    <Link to="/auth?mode=signup">
+                      <Button className="w-full">Sign Up</Button>
+                    </Link>
+                  </>
                 )}
               </div>
             </div>
