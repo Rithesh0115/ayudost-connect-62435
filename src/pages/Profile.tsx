@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { User, Mail, Phone, MapPin, Calendar, Droplet } from "lucide-react";
+import { User, Mail, Phone, MapPin, Calendar, Droplet, ArrowLeft } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -134,6 +134,15 @@ const Profile = () => {
       
       <main className="flex-1 py-12 px-4 bg-muted/30">
         <div className="container mx-auto max-w-4xl">
+          <Button
+            variant="ghost"
+            onClick={() => navigate("/patient-dashboard")}
+            className="mb-6"
+          >
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back to Dashboard
+          </Button>
+
           <div className="mb-8">
             <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-2">
               My Profile
