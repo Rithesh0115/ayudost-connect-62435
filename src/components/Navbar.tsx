@@ -200,7 +200,7 @@ const Navbar = () => {
                 </DropdownMenuContent>
               </DropdownMenu>
             </>
-          ) : !isAuthPage && (
+          ) : !isAuthPage && !isAdminLoggedIn && (
             <>
               <Link to={location.pathname === '/doctor-auth' ? '/doctor-auth' : '/auth'}>
                 <Button variant="ghost">Login</Button>
@@ -310,7 +310,7 @@ const Navbar = () => {
                       Logout
                     </Button>
                   </>
-                ) : !isAuthPage && (
+                ) : !isAuthPage && !isAdminLoggedIn && (
                   <>
                     <Link to={location.pathname === '/doctor-auth' ? '/doctor-auth' : '/auth'}>
                       <Button variant="outline" className="w-full">Login</Button>
