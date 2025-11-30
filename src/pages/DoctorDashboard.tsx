@@ -164,9 +164,17 @@ const DoctorDashboard = () => {
       <main className="flex-1 py-12 px-4 bg-muted/30">
         <div className="container mx-auto max-w-7xl">
           <div className="mb-8">
-            <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-2">
-              Doctor Dashboard
-            </h1>
+            <div className="flex items-center gap-3 mb-3">
+              <Stethoscope className="h-8 w-8 text-primary" />
+              <div>
+                <h1 className="text-3xl md:text-4xl font-bold text-foreground">
+                  {doctorProfile?.full_name ? `Dr. ${doctorProfile.full_name}` : 'Doctor Dashboard'}
+                </h1>
+                {doctorProfile?.specialty && (
+                  <p className="text-primary font-medium">{doctorProfile.specialty}</p>
+                )}
+              </div>
+            </div>
             <p className="text-muted-foreground">
               Manage your appointments and patient records
             </p>
