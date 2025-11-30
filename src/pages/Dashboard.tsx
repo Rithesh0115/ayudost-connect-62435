@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -16,6 +16,7 @@ import { AppointmentCalendar } from "@/components/AppointmentCalendar";
 
 const Dashboard = () => {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { toast } = useToast();
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -47,6 +48,7 @@ const Dashboard = () => {
   const [newPrescription, setNewPrescription] = useState({ medicine: "", dosage: "", frequency: "", duration: "", prescribedBy: "", date: "" });
   const [uploadingFile, setUploadingFile] = useState(false);
   const [showCalendar, setShowCalendar] = useState(false);
+  const [activeTab, setActiveTab] = useState("appointments");
 
   useEffect(() => {
     checkUser();
@@ -61,6 +63,18 @@ const Dashboard = () => {
 
     return () => subscription.unsubscribe();
   }, [navigate]);
+
+  // Check for edit query parameter and enable profile edit mode
+  useEffect(() => {
+    const editParam = searchParams.get('edit');
+    if (editParam === 'true') {
+      setActiveTab("profile");
+      setIsEditingProfile(true);
+      // Remove the query parameter after reading it
+      searchParams.delete('edit');
+      setSearchParams(searchParams, { replace: true });
+    }
+  }, [searchParams, setSearchParams]);
 
   const checkUser = async () => {
     const { data: { session } } = await supabase.auth.getSession();
@@ -576,7 +590,7 @@ const Dashboard = () => {
           </div>
 
           {/* Main Content */}
-          <Tabs defaultValue="appointments" className="space-y-6">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
             <TabsList>
               <TabsTrigger value="appointments">My Appointments</TabsTrigger>
               <TabsTrigger value="records">Medical Records</TabsTrigger>
