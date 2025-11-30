@@ -12,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Users, Building2, Calendar, DollarSign, TrendingUp, Activity, Mail, Phone, MapPin, Clock, CheckCircle, XCircle, AlertCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -37,10 +38,44 @@ const AdminDashboard = () => {
   const [editClinicData, setEditClinicData] = useState<any>(null);
 
   useEffect(() => {
-    // Check if admin is logged in
-    if (localStorage.getItem("isAdminLoggedIn") !== "true") {
-      navigate("/admin-auth");
-    }
+    // Check Supabase session and admin role
+    const checkAdminAccess = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        navigate("/admin-auth");
+        return;
+      }
+
+      // Verify admin role
+      const { data: roleData } = await supabase.rpc('get_user_role', {
+        _user_id: session.user.id
+      });
+
+      if (roleData !== 'admin') {
+        navigate("/admin-auth");
+      }
+    };
+
+    checkAdminAccess();
+
+    // Listen for auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      if (!session) {
+        navigate("/admin-auth");
+        return;
+      }
+
+      const { data: roleData } = await supabase.rpc('get_user_role', {
+        _user_id: session.user.id
+      });
+
+      if (roleData !== 'admin') {
+        navigate("/admin-auth");
+      }
+    });
+
+    return () => subscription.unsubscribe();
   }, [navigate]);
 
   const [users, setUsers] = useState([
