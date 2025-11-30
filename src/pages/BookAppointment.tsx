@@ -111,7 +111,7 @@ const BookAppointment = () => {
       
       // Navigate to dashboard
       setTimeout(() => {
-        navigate("/dashboard");
+        navigate("/patient-dashboard");
       }, 2000);
     } catch (error: any) {
       toast({
