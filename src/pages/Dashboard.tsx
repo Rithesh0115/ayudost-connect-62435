@@ -80,9 +80,46 @@ const Dashboard = () => {
       navigate("/patient-auth");
       return;
     }
-    setUser(session.user);
-    await loadUserData(session.user.id);
-    setLoading(false);
+
+    // Verify user has 'user' role (patient)
+    try {
+      const { data: roleData, error: roleError } = await supabase.rpc('get_user_role', {
+        _user_id: session.user.id
+      });
+
+      if (roleError) throw roleError;
+
+      // Redirect to correct dashboard based on role
+      if (roleData === 'doctor') {
+        toast({
+          title: "Access Denied",
+          description: "Please use the doctor dashboard",
+          variant: "destructive",
+        });
+        navigate("/doctor-dashboard");
+        return;
+      } else if (roleData === 'admin') {
+        toast({
+          title: "Access Denied",
+          description: "Please use the admin dashboard",
+          variant: "destructive",
+        });
+        navigate("/admin-dashboard");
+        return;
+      }
+
+      setUser(session.user);
+      await loadUserData(session.user.id);
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to verify access",
+        variant: "destructive",
+      });
+      navigate("/patient-auth");
+    } finally {
+      setLoading(false);
+    }
   };
 
   const loadUserData = async (userId: string) => {
