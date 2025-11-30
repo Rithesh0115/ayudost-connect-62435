@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,34 +15,9 @@ const PatientAuth = () => {
   const { toast } = useToast();
   const [searchParams, setSearchParams] = useSearchParams();
   const [isLoading, setIsLoading] = useState(false);
-  const [existingRole, setExistingRole] = useState<string | null>(null);
   
   // Get the mode from URL query parameter (login or signup)
   const currentTab = searchParams.get('mode') === 'signup' ? 'signup' : 'login';
-
-  // Check if user is already logged in with a different role
-  useEffect(() => {
-    const checkExistingSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (session?.user) {
-        const { data: roleData } = await supabase.rpc('get_user_role', {
-          _user_id: session.user.id
-        });
-        
-        if (roleData === 'doctor') {
-          setExistingRole('doctor');
-        } else if (roleData === 'admin') {
-          setExistingRole('admin');
-        } else if (roleData === 'user') {
-          // Already logged in as patient, redirect to dashboard
-          navigate("/patient-dashboard");
-        }
-      }
-    };
-    
-    checkExistingSession();
-  }, [navigate]);
   
   const handleTabChange = (value: string) => {
     setSearchParams({ mode: value });
@@ -64,24 +39,12 @@ const PatientAuth = () => {
     setIsLoading(true);
 
     try {
-      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email: loginEmail,
         password: loginPassword,
       });
 
-      if (authError) throw authError;
-
-      // Verify user has 'user' role (patient)
-      const { data: roleData, error: roleError } = await supabase.rpc('get_user_role', {
-        _user_id: authData.user.id
-      });
-
-      if (roleError) throw roleError;
-
-      if (roleData !== 'user') {
-        await supabase.auth.signOut();
-        throw new Error("This account is not registered as a patient");
-      }
+      if (error) throw error;
 
       toast({
         title: "Success",
@@ -204,18 +167,10 @@ const PatientAuth = () => {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            {existingRole && (
-              <div className="mb-4 p-4 bg-destructive/10 border border-destructive rounded-md">
-                <p className="text-sm text-destructive font-medium">
-                  You are currently logged in as a {existingRole === 'doctor' ? 'Doctor' : 'Admin'}. 
-                  Please logout first to access the Patient portal.
-                </p>
-              </div>
-            )}
           <Tabs value={currentTab} onValueChange={handleTabChange} className="w-full">
             <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="login" disabled={!!existingRole}>Login</TabsTrigger>
-              <TabsTrigger value="signup" disabled={!!existingRole}>Sign Up</TabsTrigger>
+              <TabsTrigger value="login">Login</TabsTrigger>
+              <TabsTrigger value="signup">Sign Up</TabsTrigger>
             </TabsList>
               
               <TabsContent value="login" className="animate-fade-in">
@@ -229,7 +184,6 @@ const PatientAuth = () => {
                       value={loginEmail}
                       onChange={(e) => setLoginEmail(e.target.value)}
                       required
-                      disabled={!!existingRole}
                     />
                   </div>
                   <div className="space-y-2">
@@ -241,10 +195,9 @@ const PatientAuth = () => {
                       value={loginPassword}
                       onChange={(e) => setLoginPassword(e.target.value)}
                       required
-                      disabled={!!existingRole}
                     />
                   </div>
-                  <Button type="submit" className="w-full" disabled={isLoading || !!existingRole}>
+                  <Button type="submit" className="w-full" disabled={isLoading}>
                     {isLoading ? "Logging in..." : "Login"}
                   </Button>
                   
