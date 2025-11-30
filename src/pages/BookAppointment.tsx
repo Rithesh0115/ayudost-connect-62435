@@ -41,8 +41,8 @@ const BookAppointment = () => {
     reviews: parseInt(searchParams.get("reviews") || "98"),
     consultationFee: searchParams.get("fee") || "₹450",
     clinic: {
-      name: "Ayur Skin Clinic",
-      address: "BC Road, Puttur - 574201",
+      name: searchParams.get("clinicName") || "Ayur Skin Clinic",
+      address: searchParams.get("clinicAddress") || "BC Road, Puttur - 574201",
     },
   };
 
@@ -88,11 +88,12 @@ const BookAppointment = () => {
         return;
       }
 
-      // Save appointment to database
+      // Save appointment to database with doctor_id
       const { error } = await supabase
         .from('patient_appointments')
         .insert({
           user_id: session.user.id,
+          doctor_id: doctorId, // Real doctor UUID
           doctor_name: doctor.name,
           clinic_name: doctor.clinic.name,
           date: selectedDate!.toLocaleDateString('en-CA'), // YYYY-MM-DD format

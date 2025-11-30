@@ -1,4 +1,5 @@
 import { useParams, useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -73,9 +74,36 @@ const ClinicDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const [doctors, setDoctors] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
   const mockClinic = clinicsData[id || "1"] || clinicsData["1"];
-  const mockDoctors = getDoctorsByClinicId(id || "1");
+
+  // Fetch real doctors from database
+  useEffect(() => {
+    const fetchDoctors = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('public_doctor_profiles')
+          .select('*')
+          .limit(5);
+
+        if (error) throw error;
+        setDoctors(data || []);
+      } catch (error: any) {
+        console.error('Error fetching doctors:', error);
+        toast({
+          title: "Error",
+          description: "Failed to load doctors",
+          variant: "destructive",
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDoctors();
+  }, [toast]);
 
   const handleBookAppointment = async (doctor: any) => {
     const { data: { session } } = await supabase.auth.getSession();
@@ -90,8 +118,8 @@ const ClinicDetail = () => {
       return;
     }
 
-    // Navigate to booking page with doctor details
-    navigate(`/book-appointment/${doctor.id}?clinicId=${id}&doctorName=${encodeURIComponent(doctor.name)}&qualification=${encodeURIComponent(doctor.qualification)}&specialization=${encodeURIComponent(doctor.specialization)}&experience=${encodeURIComponent(doctor.experience)}&rating=${doctor.rating}&reviews=${doctor.reviews}&fee=${encodeURIComponent(doctor.consultationFee)}`);
+    // Navigate to booking page with doctor details (using real doctor UUID)
+    navigate(`/book-appointment/${doctor.id}?clinicId=${id}&doctorName=${encodeURIComponent(doctor.full_name)}&qualification=${encodeURIComponent(doctor.qualifications || 'BAMS')}&specialization=${encodeURIComponent(doctor.specialty || 'General')}&experience=${doctor.experience_years ? `${doctor.experience_years} years` : '5 years'}&rating=${doctor.rating || 4.5}&reviews=${doctor.reviews || 0}&fee=${doctor.consultation_fee ? `₹${doctor.consultation_fee}` : '₹500'}&clinicName=${encodeURIComponent(doctor.clinic_name || mockClinic.name)}&clinicAddress=${encodeURIComponent(doctor.clinic_address || mockClinic.address)}`);
   };
 
   return (
@@ -145,58 +173,59 @@ const ClinicDetail = () => {
             <p className="text-muted-foreground">Choose from our team of experienced Ayurvedic practitioners</p>
           </div>
 
-          <div className="grid gap-6">
-            {mockDoctors.map((doctor) => (
-              <Card key={doctor.id} className="hover:shadow-[var(--shadow-medium)] transition-shadow">
-                <CardHeader>
-                  <div className="flex flex-col md:flex-row justify-between items-start gap-4">
-                    <div className="flex-1">
-                      <CardTitle className="text-2xl mb-2">{doctor.name}</CardTitle>
-                      <div className="space-y-1 text-sm">
-                        <p className="text-muted-foreground flex items-center gap-2">
-                          <Award className="h-4 w-4" />
-                          {doctor.qualification}
-                        </p>
-                        <p className="font-medium text-primary">{doctor.specialization}</p>
-                        <p className="text-muted-foreground">{doctor.experience} of experience</p>
+          {loading ? (
+            <div className="text-center py-12">
+              <p className="text-muted-foreground">Loading doctors...</p>
+            </div>
+          ) : doctors.length === 0 ? (
+            <div className="text-center py-12">
+              <p className="text-muted-foreground">No doctors available at this clinic</p>
+            </div>
+          ) : (
+            <div className="grid gap-6">
+              {doctors.map((doctor) => (
+                <Card key={doctor.id} className="hover:shadow-[var(--shadow-medium)] transition-shadow">
+                  <CardHeader>
+                    <div className="flex flex-col md:flex-row justify-between items-start gap-4">
+                      <div className="flex-1">
+                        <CardTitle className="text-2xl mb-2">{doctor.full_name}</CardTitle>
+                        <div className="space-y-1 text-sm">
+                          <p className="text-muted-foreground flex items-center gap-2">
+                            <Award className="h-4 w-4" />
+                            {doctor.qualifications || 'BAMS'}
+                          </p>
+                          <p className="font-medium text-primary">{doctor.specialty || 'General Practice'}</p>
+                          <p className="text-muted-foreground">{doctor.experience_years ? `${doctor.experience_years} years` : '5+ years'} of experience</p>
+                        </div>
                       </div>
                     </div>
-                    <div className="flex items-center gap-1 bg-accent/10 px-3 py-1 rounded-lg">
-                      <Star className="h-4 w-4 fill-accent text-accent" />
-                      <span className="font-semibold">{doctor.rating}</span>
-                      <span className="text-sm text-muted-foreground">({doctor.reviews})</span>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                        <div>
+                          <p className="text-muted-foreground mb-1">Consultation Fee</p>
+                          <p className="font-medium text-lg text-primary">₹{doctor.consultation_fee || 500}</p>
+                        </div>
+                        <div>
+                          <p className="text-muted-foreground mb-1">Clinic</p>
+                          <p className="font-medium">{doctor.clinic_name || mockClinic.name}</p>
+                        </div>
+                      </div>
+                      
+                      <Button 
+                        className="w-full md:w-auto"
+                        onClick={() => handleBookAppointment(doctor)}
+                      >
+                        <Calendar className="mr-2 h-4 w-4" />
+                        Book Appointment
+                      </Button>
                     </div>
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                      <div>
-                        <p className="text-muted-foreground mb-1">Languages</p>
-                        <p className="font-medium">{doctor.languages.join(", ")}</p>
-                      </div>
-                      <div>
-                        <p className="text-muted-foreground mb-1">Consultation Fee</p>
-                        <p className="font-medium text-lg text-primary">{doctor.consultationFee}</p>
-                      </div>
-                      <div>
-                        <p className="text-muted-foreground mb-1">Availability</p>
-                        <p className="font-medium">{doctor.availability}</p>
-                      </div>
-                    </div>
-                    
-                    <Button 
-                      className="w-full md:w-auto"
-                      onClick={() => handleBookAppointment(doctor)}
-                    >
-                      <Calendar className="mr-2 h-4 w-4" />
-                      Book Appointment
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
         </div>
       </main>
 
