@@ -33,7 +33,6 @@ const Dashboard = () => {
     date_of_birth: "",
     blood_group: "",
   });
-  const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [medicalRecords, setMedicalRecords] = useState<any[]>([]);
   const [prescriptions, setPrescriptions] = useState<any[]>([]);
   const [addRecordDialog, setAddRecordDialog] = useState(false);
@@ -64,25 +63,16 @@ const Dashboard = () => {
     return () => subscription.unsubscribe();
   }, [navigate]);
 
-  // Check for query parameters (edit mode and tab selection)
+  // Check for query parameters (edit mode for appointments)
   useEffect(() => {
     const editParam = searchParams.get('edit');
-    const tabParam = searchParams.get('tab');
     
     if (editParam === 'true') {
-      setActiveTab("profile");
-      setIsEditingProfile(true);
-    } else if (tabParam === 'profile') {
-      setActiveTab("profile");
+      // This is now handled on the Profile page
+      navigate('/profile?edit=true');
+      return;
     }
-    
-    // Clean up query parameters after reading them
-    if (editParam || tabParam) {
-      searchParams.delete('edit');
-      searchParams.delete('tab');
-      setSearchParams(searchParams, { replace: true });
-    }
-  }, [searchParams, setSearchParams]);
+  }, [searchParams, navigate]);
 
   const checkUser = async () => {
     const { data: { session } } = await supabase.auth.getSession();
@@ -225,39 +215,6 @@ const Dashboard = () => {
         variant: "destructive",
       });
     }
-  };
-
-  const handleSaveProfile = async () => {
-    try {
-      const { error } = await supabase
-        .from('profiles')
-        .update({
-          full_name: profile.full_name,
-          phone: profile.phone,
-          address: profile.address,
-          date_of_birth: profile.date_of_birth,
-          blood_group: profile.blood_group,
-        })
-        .eq('id', user.id);
-
-      if (error) throw error;
-
-      setIsEditingProfile(false);
-      toast({
-        title: "Profile Updated",
-        description: "Your profile has been saved successfully",
-      });
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to update profile",
-        variant: "destructive",
-      });
-    }
-  };
-
-  const handleProfileChange = (field: string, value: string) => {
-    setProfile(prev => ({ ...prev, [field]: value }));
   };
 
   const handleAddRecord = async () => {
@@ -786,96 +743,6 @@ const Dashboard = () => {
                   ) : (
                     <p className="text-muted-foreground text-center py-8">No prescriptions yet. Add your first prescription to track your medications!</p>
                   )}
-                </CardContent>
-              </Card>
-            </TabsContent>
-
-            <TabsContent value="profile">
-              <Card>
-                <CardHeader>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <CardTitle>Profile Settings</CardTitle>
-                      <CardDescription>Manage your account information</CardDescription>
-                    </div>
-                    {!isEditingProfile ? (
-                      <Button onClick={() => setIsEditingProfile(true)}>
-                        Edit Profile
-                      </Button>
-                    ) : (
-                      <div className="flex gap-2">
-                        <Button variant="outline" onClick={() => setIsEditingProfile(false)}>
-                          Cancel
-                        </Button>
-                        <Button onClick={handleSaveProfile}>
-                          Save Changes
-                        </Button>
-                      </div>
-                    )}
-                  </div>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  <div className="grid gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="name">Full Name</Label>
-                      <Input
-                        id="name"
-                        value={profile.full_name}
-                        onChange={(e) => handleProfileChange("full_name", e.target.value)}
-                        disabled={!isEditingProfile}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="email">Email</Label>
-                      <Input
-                        id="email"
-                        type="email"
-                        value={profile.email}
-                        disabled={true}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="phone">Phone Number</Label>
-                      <Input
-                        id="phone"
-                        value={profile.phone}
-                        onChange={(e) => handleProfileChange("phone", e.target.value)}
-                        disabled={!isEditingProfile}
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="address">Address</Label>
-                      <Input
-                        id="address"
-                        value={profile.address}
-                        onChange={(e) => handleProfileChange("address", e.target.value)}
-                        disabled={!isEditingProfile}
-                        placeholder="123 Main Street, Puttur"
-                      />
-                    </div>
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="dob">Date of Birth</Label>
-                        <Input
-                          id="dob"
-                          type="date"
-                          value={profile.date_of_birth}
-                          onChange={(e) => handleProfileChange("date_of_birth", e.target.value)}
-                          disabled={!isEditingProfile}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="bloodGroup">Blood Group</Label>
-                        <Input
-                          id="bloodGroup"
-                          value={profile.blood_group}
-                          onChange={(e) => handleProfileChange("blood_group", e.target.value)}
-                          disabled={!isEditingProfile}
-                          placeholder="O+"
-                        />
-                      </div>
-                    </div>
-                  </div>
                 </CardContent>
               </Card>
             </TabsContent>

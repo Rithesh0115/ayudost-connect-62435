@@ -160,13 +160,13 @@ const Navbar = () => {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-48">
                   <DropdownMenuItem asChild>
-                    <Link to="/dashboard?tab=profile" className="cursor-pointer">
+                    <Link to="/profile" className="cursor-pointer">
                       <User className="h-4 w-4 mr-2" />
                       View Profile
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
-                    <Link to="/dashboard?edit=true" className="cursor-pointer">
+                    <Link to="/profile?edit=true" className="cursor-pointer">
                       <Settings className="h-4 w-4 mr-2" />
                       Edit Profile
                     </Link>
@@ -272,13 +272,13 @@ const Navbar = () => {
                         <AvatarFallback className="bg-primary text-primary-foreground text-lg">U</AvatarFallback>
                       </Avatar>
                     </div>
-                    <Link to="/dashboard?tab=profile">
+                    <Link to="/profile">
                       <Button variant="outline" className="w-full justify-start">
                         <User className="h-4 w-4 mr-2" />
                         View Profile
                       </Button>
                     </Link>
-                    <Link to="/dashboard?edit=true">
+                    <Link to="/profile?edit=true">
                       <Button variant="outline" className="w-full justify-start">
                         <Settings className="h-4 w-4 mr-2" />
                         Edit Profile
