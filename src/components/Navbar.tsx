@@ -24,13 +24,8 @@ const Navbar = () => {
   const location = useLocation();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userRole, setUserRole] = useState<string | null>(null);
-  const [isAdminFromStorage, setIsAdminFromStorage] = useState(false);
 
   useEffect(() => {
-    // Check localStorage for admin login
-    const adminLoggedIn = localStorage.getItem("isAdminLoggedIn") === "true";
-    setIsAdminFromStorage(adminLoggedIn);
-    
     // Check Supabase auth session and user role
     const checkSession = async () => {
       const { data: { session } } = await supabase.auth.getSession();
@@ -72,17 +67,14 @@ const Navbar = () => {
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
-    localStorage.removeItem("isAdminLoggedIn");
     setIsLoggedIn(false);
     setUserRole(null);
-    setIsAdminFromStorage(false);
     navigate("/");
   };
 
   const isDoctorLoggedIn = userRole === 'doctor';
-  const isAdminLoggedIn = userRole === 'admin' || isAdminFromStorage;
+  const isAdminLoggedIn = userRole === 'admin';
   const isAuthPage = location.pathname === '/doctor-auth' || location.pathname === '/admin-auth';
-  const isAdminPage = location.pathname === '/admin';
 
   return (
     <nav className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -93,7 +85,7 @@ const Navbar = () => {
         </Link>
 
         {/* Desktop Navigation */}
-        {!isDoctorLoggedIn && !isAdminLoggedIn && !isAuthPage && !isAdminPage && (
+        {!isDoctorLoggedIn && !isAdminLoggedIn && !isAuthPage && (
           <div className="hidden md:flex items-center gap-6">
             <Link to="/" className="text-sm font-medium text-foreground hover:text-primary transition-colors">
               Home
@@ -146,40 +138,34 @@ const Navbar = () => {
           ) : isAdminLoggedIn ? (
             <>
               <NotificationBell />
-              <div className="flex items-center gap-3">
-                <div className="flex flex-col items-end">
-                  <span className="text-sm font-medium text-foreground">Admin</span>
-                  <span className="text-xs text-muted-foreground">authenticated</span>
-                </div>
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" className="rounded-full">
-                      <Avatar className="h-9 w-9">
-                        <AvatarFallback className="bg-primary text-primary-foreground">A</AvatarFallback>
-                      </Avatar>
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-48 bg-background border border-border z-50">
-                    <DropdownMenuItem asChild>
-                      <Link to="/admin" className="cursor-pointer">
-                        <User className="h-4 w-4 mr-2" />
-                        View Profile
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem asChild>
-                      <Link to="/admin?edit=true" className="cursor-pointer">
-                        <Settings className="h-4 w-4 mr-2" />
-                        Edit Profile
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={handleLogout} className="cursor-pointer">
-                      <LogOut className="h-4 w-4 mr-2" />
-                      Logout
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </div>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="icon" className="rounded-full">
+                    <Avatar className="h-9 w-9">
+                      <AvatarFallback className="bg-primary text-primary-foreground">A</AvatarFallback>
+                    </Avatar>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48">
+                  <DropdownMenuItem asChild>
+                    <Link to="/admin" className="cursor-pointer">
+                      <User className="h-4 w-4 mr-2" />
+                      View Profile
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem asChild>
+                    <Link to="/admin?edit=true" className="cursor-pointer">
+                      <Settings className="h-4 w-4 mr-2" />
+                      Edit Profile
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleLogout} className="cursor-pointer">
+                    <LogOut className="h-4 w-4 mr-2" />
+                    Logout
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </>
           ) : isLoggedIn ? (
             <>
@@ -213,7 +199,7 @@ const Navbar = () => {
                 </DropdownMenuContent>
               </DropdownMenu>
             </>
-          ) : !isAuthPage && !isAdminLoggedIn && !isAdminPage && (
+          ) : !isAuthPage && (
             <>
               <Link to={location.pathname === '/doctor-auth' ? '/doctor-auth' : '/auth'}>
                 <Button variant="ghost">Login</Button>
@@ -234,7 +220,7 @@ const Navbar = () => {
           </SheetTrigger>
           <SheetContent side="right" className="w-[300px]">
             <div className="flex flex-col gap-4 mt-8">
-              {!isDoctorLoggedIn && !isAdminLoggedIn && !isAuthPage && !isAdminPage && (
+              {!isDoctorLoggedIn && !isAdminLoggedIn && !isAuthPage && (
                 <>
                   <Link to="/" className="text-lg font-medium text-foreground hover:text-primary transition-colors">
                     Home
@@ -323,7 +309,7 @@ const Navbar = () => {
                       Logout
                     </Button>
                   </>
-                ) : !isAuthPage && !isAdminLoggedIn && !isAdminPage && (
+                ) : !isAuthPage && (
                   <>
                     <Link to={location.pathname === '/doctor-auth' ? '/doctor-auth' : '/auth'}>
                       <Button variant="outline" className="w-full">Login</Button>
