@@ -12,7 +12,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Users, Building2, Calendar, DollarSign, TrendingUp, Activity, Mail, Phone, MapPin, Clock, CheckCircle, XCircle, AlertCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -38,32 +37,11 @@ const AdminDashboard = () => {
   const [editClinicData, setEditClinicData] = useState<any>(null);
 
   useEffect(() => {
-    // Check if admin is logged in with valid Supabase session and admin role
-    const checkAdminAccess = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (!session) {
-        navigate("/admin-auth");
-        return;
-      }
-
-      // Verify admin role
-      const { data: roleData, error } = await supabase.rpc('get_user_role', {
-        _user_id: session.user.id
-      });
-
-      if (error || roleData !== 'admin') {
-        toast({
-          title: "Access Denied",
-          description: "You do not have admin privileges",
-          variant: "destructive",
-        });
-        navigate("/");
-      }
-    };
-
-    checkAdminAccess();
-  }, [navigate, toast]);
+    // Check if admin is logged in
+    if (localStorage.getItem("isAdminLoggedIn") !== "true") {
+      navigate("/admin-auth");
+    }
+  }, [navigate]);
 
   const [users, setUsers] = useState([
     { id: 1, name: "Rahul Mehta", email: "rahul@example.com", role: "Patient", status: "Active", joined: "2024-01-15" },
