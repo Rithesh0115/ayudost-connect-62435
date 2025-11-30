@@ -31,7 +31,7 @@ const AdminAuth = () => {
         if (roleData) {
           if (roleData === 'admin') {
             // Already logged in as admin, redirect to dashboard
-            navigate("/admin");
+            navigate("/admin-dashboard");
           } else {
             // Logged in as a different role
             setExistingRole(roleData);
@@ -73,7 +73,7 @@ const AdminAuth = () => {
             title: "Admin Access Granted",
             description: "Welcome to the admin dashboard",
           });
-          navigate("/admin");
+          navigate("/admin-dashboard");
         } else {
           // Not an admin, sign them out
           await supabase.auth.signOut();

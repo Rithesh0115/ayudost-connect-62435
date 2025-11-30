@@ -51,7 +51,7 @@ const PatientAuth = () => {
         description: "Logged in successfully!",
       });
       
-      navigate("/dashboard");
+      navigate("/patient-dashboard");
     } catch (error: any) {
       toast({
         title: "Error",
@@ -104,7 +104,7 @@ const PatientAuth = () => {
         description: "Account created successfully! You can now login.",
       });
       
-      navigate("/dashboard");
+      navigate("/patient-dashboard");
     } catch (error: any) {
       toast({
         title: "Error",
