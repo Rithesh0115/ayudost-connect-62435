@@ -138,7 +138,11 @@ const DoctorDashboard = () => {
         <div className="container mx-auto max-w-7xl">
           <div className="mb-8">
             <h1 className="text-3xl md:text-4xl font-bold text-foreground mb-2">
-              Doctor Dashboard
+              {loading ? (
+                "Doctor Dashboard"
+              ) : (
+                `Welcome, ${doctorProfile?.full_name || "Doctor"}`
+              )}
             </h1>
             <p className="text-muted-foreground">
               Manage your appointments and patient records
