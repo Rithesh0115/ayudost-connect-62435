@@ -47,6 +47,92 @@ export type Database = {
         }
         Relationships: []
       }
+      clinic_doctors: {
+        Row: {
+          clinic_id: string
+          created_at: string | null
+          doctor_id: string
+          id: string
+          is_primary: boolean | null
+        }
+        Insert: {
+          clinic_id: string
+          created_at?: string | null
+          doctor_id: string
+          id?: string
+          is_primary?: boolean | null
+        }
+        Update: {
+          clinic_id?: string
+          created_at?: string | null
+          doctor_id?: string
+          id?: string
+          is_primary?: boolean | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "clinic_doctors_clinic_id_fkey"
+            columns: ["clinic_id"]
+            isOneToOne: false
+            referencedRelation: "clinics"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      clinics: {
+        Row: {
+          address: string
+          created_at: string | null
+          district: string
+          email: string | null
+          id: string
+          name: string
+          phone: string | null
+          rating: number | null
+          reviews_count: number | null
+          services: string[] | null
+          state: string
+          status: string | null
+          taluk: string
+          timings: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          address: string
+          created_at?: string | null
+          district: string
+          email?: string | null
+          id?: string
+          name: string
+          phone?: string | null
+          rating?: number | null
+          reviews_count?: number | null
+          services?: string[] | null
+          state?: string
+          status?: string | null
+          taluk: string
+          timings?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          address?: string
+          created_at?: string | null
+          district?: string
+          email?: string | null
+          id?: string
+          name?: string
+          phone?: string | null
+          rating?: number | null
+          reviews_count?: number | null
+          services?: string[] | null
+          state?: string
+          status?: string | null
+          taluk?: string
+          timings?: string | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       doctor_patients: {
         Row: {
           created_at: string | null
