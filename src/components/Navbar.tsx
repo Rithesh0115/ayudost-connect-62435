@@ -24,22 +24,35 @@ const Navbar = () => {
   const location = useLocation();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userRole, setUserRole] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     // Check Supabase auth session and user role
     const checkSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      setIsLoggedIn(!!session);
-      
-      if (session?.user) {
-        // Fetch user role from database
-        const { data: roleData } = await supabase
-          .from('user_roles')
-          .select('role')
-          .eq('user_id', session.user.id)
-          .single();
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        setIsLoggedIn(!!session);
         
-        setUserRole(roleData?.role || null);
+        if (session?.user) {
+          // Use RPC function to get user role
+          const { data: roleData, error } = await supabase.rpc('get_user_role', {
+            _user_id: session.user.id
+          });
+          
+          if (!error && roleData) {
+            setUserRole(roleData);
+          } else {
+            console.error('Error fetching user role:', error);
+            setUserRole(null);
+          }
+        } else {
+          setUserRole(null);
+        }
+      } catch (error) {
+        console.error('Error checking session:', error);
+        setUserRole(null);
+      } finally {
+        setIsLoading(false);
       }
     };
     
@@ -50,13 +63,22 @@ const Navbar = () => {
       setIsLoggedIn(!!session);
       
       if (session?.user) {
-        const { data: roleData } = await supabase
-          .from('user_roles')
-          .select('role')
-          .eq('user_id', session.user.id)
-          .single();
-        
-        setUserRole(roleData?.role || null);
+        try {
+          // Use RPC function to get user role
+          const { data: roleData, error } = await supabase.rpc('get_user_role', {
+            _user_id: session.user.id
+          });
+          
+          if (!error && roleData) {
+            setUserRole(roleData);
+          } else {
+            console.error('Error fetching user role:', error);
+            setUserRole(null);
+          }
+        } catch (error) {
+          console.error('Error in auth state change:', error);
+          setUserRole(null);
+        }
       } else {
         setUserRole(null);
       }
@@ -78,8 +100,22 @@ const Navbar = () => {
 
   const isDoctorLoggedIn = userRole === 'doctor';
   const isAdminLoggedIn = userRole === 'admin';
-  const isAuthPage = location.pathname === '/doctor-auth' || location.pathname === '/admin-auth';
+  const isAuthPage = location.pathname === '/doctor-auth' || location.pathname === '/admin-auth' || location.pathname === '/patient-auth';
   const isAdminPage = location.pathname === '/admin';
+
+  // Show loading state while checking auth
+  if (isLoading) {
+    return (
+      <nav className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <div className="container mx-auto px-4 h-16 flex items-center justify-between">
+          <Link to="/" className="flex items-center gap-2 text-xl font-bold text-primary hover:text-primary/80 transition-colors">
+            <img src={ayudostLogo} alt="AyuDost Logo" className="h-8 w-8 object-contain" />
+            <span>AyuDost</span>
+          </Link>
+        </div>
+      </nav>
+    );
+  }
 
   return (
     <nav className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
