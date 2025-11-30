@@ -13,11 +13,15 @@ import Footer from "@/components/Footer";
 const Auth = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [isLoading, setIsLoading] = useState(false);
   
   // Get the mode from URL query parameter (login or signup)
-  const defaultTab = searchParams.get('mode') === 'signup' ? 'signup' : 'login';
+  const currentTab = searchParams.get('mode') === 'signup' ? 'signup' : 'login';
+  
+  const handleTabChange = (value: string) => {
+    setSearchParams({ mode: value });
+  };
   
   // Login state
   const [loginEmail, setLoginEmail] = useState("");
@@ -163,13 +167,13 @@ const Auth = () => {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <Tabs defaultValue={defaultTab} className="w-full">
-              <TabsList className="grid w-full grid-cols-2">
-                <TabsTrigger value="login">Login</TabsTrigger>
-                <TabsTrigger value="signup">Sign Up</TabsTrigger>
-              </TabsList>
+          <Tabs value={currentTab} onValueChange={handleTabChange} className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="login">Login</TabsTrigger>
+              <TabsTrigger value="signup">Sign Up</TabsTrigger>
+            </TabsList>
               
-              <TabsContent value="login">
+              <TabsContent value="login" className="animate-fade-in">
                 <form onSubmit={handleLogin} className="space-y-4 mt-4">
                   <div className="space-y-2">
                     <Label htmlFor="login-email">Email</Label>
@@ -249,7 +253,7 @@ const Auth = () => {
                 </form>
               </TabsContent>
               
-              <TabsContent value="signup">
+              <TabsContent value="signup" className="animate-fade-in">
                 <form onSubmit={handleSignup} className="space-y-4 mt-4">
                   <div className="space-y-2">
                     <Label htmlFor="signup-name">Full Name</Label>
