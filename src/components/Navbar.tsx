@@ -24,8 +24,13 @@ const Navbar = () => {
   const location = useLocation();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [userRole, setUserRole] = useState<string | null>(null);
+  const [isAdminFromStorage, setIsAdminFromStorage] = useState(false);
 
   useEffect(() => {
+    // Check localStorage for admin login
+    const adminLoggedIn = localStorage.getItem("isAdminLoggedIn") === "true";
+    setIsAdminFromStorage(adminLoggedIn);
+    
     // Check Supabase auth session and user role
     const checkSession = async () => {
       const { data: { session } } = await supabase.auth.getSession();
@@ -67,13 +72,15 @@ const Navbar = () => {
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
+    localStorage.removeItem("isAdminLoggedIn");
     setIsLoggedIn(false);
     setUserRole(null);
+    setIsAdminFromStorage(false);
     navigate("/");
   };
 
   const isDoctorLoggedIn = userRole === 'doctor';
-  const isAdminLoggedIn = userRole === 'admin';
+  const isAdminLoggedIn = userRole === 'admin' || isAdminFromStorage;
   const isAuthPage = location.pathname === '/doctor-auth' || location.pathname === '/admin-auth';
   const isAdminPage = location.pathname === '/admin';
 
