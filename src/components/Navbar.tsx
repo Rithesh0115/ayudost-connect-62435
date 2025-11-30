@@ -201,7 +201,7 @@ const Navbar = () => {
             </>
           ) : (
             <>
-              <Link to="/auth">
+              <Link to="/auth?mode=login">
                 <Button variant="ghost">Login</Button>
               </Link>
               <Link to="/auth?mode=signup">
@@ -311,7 +311,7 @@ const Navbar = () => {
                   </>
                 ) : (
                   <>
-                    <Link to="/auth">
+                    <Link to="/auth?mode=login">
                       <Button variant="outline" className="w-full">Login</Button>
                     </Link>
                     <Link to="/auth?mode=signup">
