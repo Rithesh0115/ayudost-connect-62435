@@ -117,13 +117,13 @@ const Navbar = () => {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-48">
                   <DropdownMenuItem asChild>
-                    <Link to="/doctor-profile" className="flex items-center cursor-pointer">
+                    <Link to="/doctor-profile" className="cursor-pointer">
                       <User className="h-4 w-4 mr-2" />
                       View Profile
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
-                    <Link to="/doctor-profile?edit=true" className="flex items-center cursor-pointer">
+                    <Link to="/doctor-profile?edit=true" className="cursor-pointer">
                       <Settings className="h-4 w-4 mr-2" />
                       Edit Profile
                     </Link>
@@ -149,13 +149,13 @@ const Navbar = () => {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-48">
                   <DropdownMenuItem asChild>
-                    <Link to="/admin-profile" className="flex items-center cursor-pointer">
+                    <Link to="/admin-profile" className="cursor-pointer">
                       <User className="h-4 w-4 mr-2" />
                       View Profile
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
-                    <Link to="/admin-profile?edit=true" className="flex items-center cursor-pointer">
+                    <Link to="/admin-profile?edit=true" className="cursor-pointer">
                       <Settings className="h-4 w-4 mr-2" />
                       Edit Profile
                     </Link>
@@ -181,13 +181,13 @@ const Navbar = () => {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-48">
                   <DropdownMenuItem asChild>
-                    <Link to="/patient-profile" className="flex items-center cursor-pointer">
+                    <Link to="/patient-profile" className="cursor-pointer">
                       <User className="h-4 w-4 mr-2" />
                       View Profile
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
-                    <Link to="/profile?edit=true" className="flex items-center cursor-pointer">
+                    <Link to="/profile?edit=true" className="cursor-pointer">
                       <Settings className="h-4 w-4 mr-2" />
                       Edit Profile
                     </Link>
