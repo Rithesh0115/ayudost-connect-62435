@@ -22,39 +22,57 @@ import { supabase } from "@/integrations/supabase/client";
 const Navbar = () => {
   const navigate = useNavigate();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [isDoctorLoggedIn, setIsDoctorLoggedIn] = useState(false);
-  const [isAdminLoggedIn, setIsAdminLoggedIn] = useState(false);
+  const [userRole, setUserRole] = useState<string | null>(null);
 
   useEffect(() => {
-    // Check Supabase auth session
+    // Check Supabase auth session and user role
     const checkSession = async () => {
       const { data: { session } } = await supabase.auth.getSession();
       setIsLoggedIn(!!session);
+      
+      if (session?.user) {
+        // Fetch user role from database
+        const { data: roleData } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', session.user.id)
+          .single();
+        
+        setUserRole(roleData?.role || null);
+      }
     };
     
     checkSession();
 
     // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       setIsLoggedIn(!!session);
+      
+      if (session?.user) {
+        const { data: roleData } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', session.user.id)
+          .single();
+        
+        setUserRole(roleData?.role || null);
+      } else {
+        setUserRole(null);
+      }
     });
-
-    // Keep localStorage checks for doctor/admin (for now)
-    setIsDoctorLoggedIn(localStorage.getItem("isDoctorLoggedIn") === "true");
-    setIsAdminLoggedIn(localStorage.getItem("isAdminLoggedIn") === "true");
 
     return () => subscription.unsubscribe();
   }, []);
 
   const handleLogout = async () => {
     await supabase.auth.signOut();
-    localStorage.removeItem("isDoctorLoggedIn");
-    localStorage.removeItem("isAdminLoggedIn");
     setIsLoggedIn(false);
-    setIsDoctorLoggedIn(false);
-    setIsAdminLoggedIn(false);
+    setUserRole(null);
     navigate("/");
   };
+
+  const isDoctorLoggedIn = userRole === 'doctor';
+  const isAdminLoggedIn = userRole === 'admin';
 
   return (
     <nav className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
