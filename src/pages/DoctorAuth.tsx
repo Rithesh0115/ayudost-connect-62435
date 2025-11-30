@@ -110,8 +110,9 @@ const DoctorAuth = () => {
     setIsLoading(true);
     
     const formData = new FormData(e.target as HTMLFormElement);
-    const email = formData.get("email") as string;
     const fullName = formData.get("fullName") as string;
+    const email = formData.get("email") as string;
+    const phone = formData.get("phone") as string;
     const password = formData.get("password") as string;
     const confirmPassword = formData.get("confirmPassword") as string;
 
@@ -133,6 +134,7 @@ const DoctorAuth = () => {
         options: {
           data: {
             full_name: fullName,
+            phone: phone,
             is_doctor: true,
           },
           emailRedirectTo: `${window.location.origin}/doctor-dashboard`,
@@ -270,6 +272,16 @@ const DoctorAuth = () => {
               <TabsContent value="signup" className="animate-fade-in">
                 <form onSubmit={handleSignup} className="space-y-4">
                   <div className="space-y-2">
+                    <Label htmlFor="signup-name">Full Name</Label>
+                    <Input
+                      id="signup-name"
+                      name="fullName"
+                      type="text"
+                      placeholder="Enter your full name"
+                      required
+                    />
+                  </div>
+                  <div className="space-y-2">
                     <Label htmlFor="signup-email">Email</Label>
                     <Input
                       id="signup-email"
@@ -280,12 +292,12 @@ const DoctorAuth = () => {
                     />
                   </div>
                   <div className="space-y-2">
-                    <Label htmlFor="signup-name">Full Name</Label>
+                    <Label htmlFor="signup-phone">Phone</Label>
                     <Input
-                      id="signup-name"
-                      name="fullName"
-                      type="text"
-                      placeholder="Enter your full name"
+                      id="signup-phone"
+                      name="phone"
+                      type="tel"
+                      placeholder="+91 98765 43210"
                       required
                     />
                   </div>
