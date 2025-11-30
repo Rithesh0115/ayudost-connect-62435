@@ -84,13 +84,13 @@ const BookAppointment = () => {
           description: "Please login to book an appointment",
           variant: "destructive",
         });
-        navigate("/auth");
+        navigate("/patient-auth");
         return;
       }
 
       // Save appointment to database
       const { error } = await supabase
-        .from('appointments')
+        .from('patient_appointments')
         .insert({
           user_id: session.user.id,
           doctor_name: doctor.name,

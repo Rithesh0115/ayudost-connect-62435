@@ -28,8 +28,8 @@ serve(async (req) => {
 
     // Get active prescriptions
     const { data: prescriptions, error: prescriptionsError } = await supabaseClient
-      .from("prescriptions")
-      .select("*, profiles!inner(email, full_name)")
+      .from("patient_prescriptions")
+      .select("*, patient_profiles!inner(email, full_name)")
       .lte("start_date", today)
       .or(`end_date.is.null,end_date.gte.${today}`);
 
@@ -57,14 +57,14 @@ serve(async (req) => {
 
         // Send email (currently disabled - uncomment Resend import to enable)
         try {
-          console.log(`Email would be sent to ${prescription.profiles.email}`);
+          console.log(`Email would be sent to ${prescription.patient_profiles.email}`);
           // await resend.emails.send({
           //   from: "Ayudost <onboarding@resend.dev>",
-          //   to: [prescription.profiles.email],
+          //   to: [prescription.patient_profiles.email],
           //   subject: `Medication Reminder - ${prescription.medication}`,
           //   html: `
           //     <h2>Medication Reminder</h2>
-          //     <p>Hello ${prescription.profiles.full_name},</p>
+          //     <p>Hello ${prescription.patient_profiles.full_name},</p>
           //     <p>This is a reminder to take your medication:</p>
           //     <p><strong>Medication:</strong> ${prescription.medication}</p>
           //     <p><strong>Dosage:</strong> ${prescription.dosage}</p>
@@ -73,7 +73,7 @@ serve(async (req) => {
           //     <p>Stay healthy!</p>
           //   `,
           // });
-          // console.log(`Email sent successfully to ${prescription.profiles.email}`);
+          // console.log(`Email sent successfully to ${prescription.patient_profiles.email}`);
         } catch (emailError) {
           console.error("Error sending email:", emailError);
         }

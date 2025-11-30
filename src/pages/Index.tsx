@@ -145,7 +145,7 @@ const Index = () => {
             Join thousands of satisfied users who have discovered the power of authentic Ayurvedic healthcare
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link to="/auth?mode=signup">
+            <Link to="/patient-auth?mode=signup">
               <Button size="lg" variant="secondary" className="min-w-[200px]">
                 Sign Up Now
               </Button>

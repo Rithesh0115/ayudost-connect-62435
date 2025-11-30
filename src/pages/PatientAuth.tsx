@@ -10,7 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 
-const Auth = () => {
+const PatientAuth = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -93,7 +93,7 @@ const Auth = () => {
 
       // Update profile with additional info
       if (data.user) {
-        await supabase.from('profiles').update({
+        await supabase.from('patient_profiles').update({
           full_name: signupName,
           phone: signupPhone,
         }).eq('id', data.user.id);
@@ -376,4 +376,4 @@ const Auth = () => {
   );
 };
 
-export default Auth;
+export default PatientAuth;

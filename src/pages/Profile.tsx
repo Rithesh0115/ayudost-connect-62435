@@ -31,7 +31,7 @@ const Profile = () => {
     checkUser();
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (!session) {
-        navigate("/auth");
+        navigate("/patient-auth");
       } else {
         setUser(session.user);
         loadProfile(session.user.id);
@@ -55,7 +55,7 @@ const Profile = () => {
   const checkUser = async () => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) {
-      navigate("/auth");
+      navigate("/patient-auth");
       return;
     }
     setUser(session.user);
@@ -66,7 +66,7 @@ const Profile = () => {
   const loadProfile = async (userId: string) => {
     try {
       const { data: profileData } = await supabase
-        .from('profiles')
+        .from('patient_profiles')
         .select('*')
         .eq('id', userId)
         .single();
@@ -89,7 +89,7 @@ const Profile = () => {
   const handleSaveProfile = async () => {
     try {
       const { error } = await supabase
-        .from('profiles')
+        .from('patient_profiles')
         .update({
           full_name: profile.full_name,
           phone: profile.phone,
@@ -124,7 +124,7 @@ const Profile = () => {
   }
 
   const getInitials = (name: string) => {
-    if (!name) return "U";
+    if (!name) return "P";
     return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
   };
 
