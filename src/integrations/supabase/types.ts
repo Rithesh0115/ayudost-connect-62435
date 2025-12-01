@@ -309,6 +309,7 @@ export type Database = {
           doctor_id: string | null
           doctor_name: string
           id: string
+          patient_name: string | null
           status: string | null
           time: string
           updated_at: string | null
@@ -321,6 +322,7 @@ export type Database = {
           doctor_id?: string | null
           doctor_name: string
           id?: string
+          patient_name?: string | null
           status?: string | null
           time: string
           updated_at?: string | null
@@ -333,6 +335,7 @@ export type Database = {
           doctor_id?: string | null
           doctor_name?: string
           id?: string
+          patient_name?: string | null
           status?: string | null
           time?: string
           updated_at?: string | null

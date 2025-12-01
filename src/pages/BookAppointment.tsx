@@ -88,7 +88,14 @@ const BookAppointment = () => {
         return;
       }
 
-      // Save appointment to database with doctor_id
+      // Fetch patient profile to get name
+      const { data: patientProfile } = await supabase
+        .from('patient_profiles')
+        .select('full_name')
+        .eq('id', session.user.id)
+        .maybeSingle();
+
+      // Save appointment to database with doctor_id and patient_name
       const { error } = await supabase
         .from('patient_appointments')
         .insert({
@@ -96,6 +103,7 @@ const BookAppointment = () => {
           doctor_id: doctorId, // Real doctor UUID
           doctor_name: doctor.name,
           clinic_name: doctor.clinic.name,
+          patient_name: patientProfile?.full_name || 'Patient', // NEW
           date: selectedDate!.toLocaleDateString('en-CA'), // YYYY-MM-DD format
           time: selectedTimeSlot,
           status: 'upcoming',

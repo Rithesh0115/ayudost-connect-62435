@@ -228,7 +228,7 @@ const DoctorDashboard = () => {
                     todayAppointments.map((appointment) => (
                       <div key={appointment.id} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 border border-border rounded-lg">
                         <div className="space-y-1 mb-4 sm:mb-0">
-                          <h3 className="font-semibold">Patient</h3>
+                          <h3 className="font-semibold">{appointment.patient_name || 'Patient'}</h3>
                           <div className="flex items-center gap-2 mt-2">
                             <Badge variant="outline">In-Person</Badge>
                             <Badge variant="secondary">{appointment.status}</Badge>
