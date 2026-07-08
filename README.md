@@ -1,73 +1,56 @@
-# Welcome to your Lovable project
+# Ayudost Connect
 
-## Project info
+## Project Overview
 
-**URL**: https://lovable.dev/projects/c66743d6-acba-4c04-bb4d-bd485abea17b
+Ayudost Connect is a comprehensive healthcare management platform designed to seamlessly connect patients, doctors, and clinic administrators. The platform provides dedicated dashboards and authentication flows for different user roles, enabling efficient clinic management, appointment booking, and medical profile tracking.
 
-## How can I edit this code?
+## Features
 
-There are several ways of editing your application.
+- **Multi-Role Authentication**: Dedicated secure login and registration for Patients, Doctors, and Admins.
+- **Patient Dashboard**: Patients can view available clinics, manage their profiles, and easily book appointments with specific doctors.
+- **Doctor Dashboard**: Doctors have access to manage their schedules, view patient appointments, and update their professional profiles.
+- **Admin Dashboard**: Administrators can oversee clinic operations, manage staff, and ensure smooth functioning of the healthcare facility.
+- **Clinic Directory**: Browse a detailed list of clinics, view clinic specifics, and find the right healthcare provider.
+- **Appointment Booking**: Streamlined process for patients to schedule visits with doctors.
 
-**Use Lovable**
+## Technologies Used
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/c66743d6-acba-4c04-bb4d-bd485abea17b) and start prompting.
+This project is built using modern web development technologies to ensure performance, scalability, and a great user experience:
 
-Changes made via Lovable will be committed automatically to this repo.
+- **React**: Frontend UI library for building dynamic interfaces.
+- **Vite**: Next-generation frontend tooling for fast development and optimized builds.
+- **TypeScript**: Static typing for more robust and maintainable code.
+- **Tailwind CSS**: Utility-first CSS framework for rapid and responsive styling.
+- **shadcn/ui**: High-quality, customizable UI components.
+- **React Router**: For seamless navigation across different application views.
+- **Supabase**: Backend-as-a-service for database and authentication management.
 
-**Use your preferred IDE**
+## Getting Started
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
-
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
-
-Follow these steps:
+To run this project locally, make sure you have Node.js and npm installed.
 
 ```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+# Step 1: Clone the repository
+git clone https://github.com/Rithesh0115/ayudost-connect.git
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+# Step 2: Navigate to the project directory
+cd ayudost-connect
 
-# Step 3: Install the necessary dependencies.
-npm i
+# Step 3: Install the necessary dependencies
+npm install
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+# Step 4: Start the development server
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+The application will be running locally and accessible via your browser.
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+## Deployment
 
-**Use GitHub Codespaces**
+To deploy this project, build the production-ready application using:
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+```sh
+npm run build
+```
 
-## What technologies are used for this project?
-
-This project is built with:
-
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
-
-## How can I deploy this project?
-
-Simply open [Lovable](https://lovable.dev/projects/c66743d6-acba-4c04-bb4d-bd485abea17b) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+This will generate an optimized build in the `dist` folder, which can be deployed to any static hosting service like Vercel, Netlify, or GitHub Pages.
